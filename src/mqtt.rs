@@ -5,8 +5,9 @@ use rumqttc::{
     Packet, 
 };
 use rumqttc::mqttbytes::v4::Publish;
-use std::{time::Duration, str::Split};
-use super::shellies::Shelly;
+use std::{time::Duration};
+use crate::shellies::decode_shelly_sub;
+
 
 pub fn init<S, T>(id: S, host: T, port: u16) -> (AsyncClient, EventLoop)
 where
@@ -43,20 +44,4 @@ pub fn decode_subsciptions(content:Publish){
     }
 }
 
-pub fn decode_shelly_sub(content:&Publish,mut path:Split<&str>){
-    match path.next() {
-        Some("announce")=>{
 
-            match serde_json::from_slice(&content.payload) {
-                Ok(device) => {
-                    let shelly_device:Shelly=device;
-                    println!("{:?}", shelly_device);
-                },
-                Err(err) => println!("{:?}",err),
-            }
-            
-            
-        },
-        _=>{}, 
-    }
-}

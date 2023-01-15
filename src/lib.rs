@@ -1,3 +1,3 @@
 pub mod mqtt;
-pub mod sensors;
-pub mod shellies;
+pub mod devices;
+pub mod shellies; 

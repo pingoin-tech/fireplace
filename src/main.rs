@@ -1,11 +1,18 @@
+use chrono::Utc;
 use rumqttc::QoS;
-use std::time::Duration;
+use std::{time::Duration, collections::HashMap};
 use tokio::{self, task, time};
-use home_center::mqtt;
+use home_center::{mqtt, devices::SENSOR_LIST};
 
 
 #[tokio::main]
 async fn main() {
+    {
+        SENSOR_LIST.lock().expect("could not lock").get_or_insert(HashMap::new());
+    }
+
+    let now = Utc::now();
+    println!("{}", now);
     let (client, eventloop) = mqtt::init("rumqtt-async", "192.168.178.110", 1883);
 
     client
