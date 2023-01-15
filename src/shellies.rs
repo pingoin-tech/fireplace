@@ -45,7 +45,10 @@ pub fn decode_shelly_sub(content: &Publish, mut path: Split<&str>) {
                     Ok(mut list_option) => {
                         if let Some(list) = list_option.as_mut() {
                             if list.contains_key(&shelly.id) {
-                                println!("{} already exists", shelly.id);
+                                println!(
+                                    "{} already exists\nUpdate not jet implemented",
+                                    shelly.id
+                                );
                             } else {
                                 list.insert(
                                     shelly.id.clone(),
@@ -54,7 +57,6 @@ pub fn decode_shelly_sub(content: &Publish, mut path: Split<&str>) {
                                         subdevice: ShellyType(shelly),
                                     },
                                 );
-                                println!("{:?}", &list);
                             }
                         }
                     }

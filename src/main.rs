@@ -1,5 +1,5 @@
+use actix_files as fs;
 use actix_web::{get, App, HttpResponse, HttpServer, Responder};
-use chrono::Utc;
 use home_center::{devices::SENSOR_LIST, mqtt};
 use rumqttc::QoS;
 use std::{collections::HashMap, time::Duration};
@@ -13,9 +13,6 @@ async fn main() {
             .expect("could not lock")
             .get_or_insert(HashMap::new());
     }
-
-    let now = Utc::now();
-    println!("{}", now);
     let (client, eventloop) = mqtt::init("rumqtt-async", "192.168.178.110", 1883);
 
     client
@@ -25,10 +22,14 @@ async fn main() {
 
     task::spawn(mqtt::work(eventloop));
 
-    let http_handler = HttpServer::new(|| App::new().service(hello))
-        .bind(("0.0.0.0", 8080))
-        .unwrap()
-        .run();
+    let http_handler = HttpServer::new(|| {
+        App::new()
+            .service(hello)
+            .service(fs::Files::new("/", "./web/dist/").index_file("index.html"))
+    })
+    .bind(("0.0.0.0", 8080))
+    .unwrap()
+    .run();
 
     for i in 0..10 {
         client
@@ -41,7 +42,7 @@ async fn main() {
     http_handler.await.unwrap();
 }
 
-#[get("/")]
+#[get("/api/")]
 async fn hello() -> impl Responder {
     match SENSOR_LIST.lock() {
         Ok(mut list_option) => {
