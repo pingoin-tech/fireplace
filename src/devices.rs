@@ -2,12 +2,13 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use super::shellies::Shelly;
-use std::{collections::HashMap, sync::Mutex};
+use std::{ sync::Mutex};
 
-type DeviceDataBase = Mutex<Option<HashMap<String, Device>>>;
+type DeviceDataBase = Mutex<Option<Vec<Device>>>;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Device {
+    pub id:String,
     pub last_message: DateTime<Utc>,
     pub subdevice: DeviceType,
 }

@@ -1,7 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
+import axios from "axios";
 
 defineProps<{ msg: string }>()
+let blub=ref({})
+onMounted(async ()=>{
+blub.value=await (await axios.get("/api/devices/")).data;
+})
 
 const count = ref(0)
 </script>

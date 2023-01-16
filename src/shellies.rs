@@ -44,19 +44,21 @@ pub fn decode_shelly_sub(content: &Publish, mut path: Split<&str>) {
                 match SENSOR_LIST.lock() {
                     Ok(mut list_option) => {
                         if let Some(list) = list_option.as_mut() {
-                            if list.contains_key(&shelly.id) {
-                                println!(
-                                    "{} already exists\nUpdate not jet implemented",
-                                    shelly.id
-                                );
-                            } else {
-                                list.insert(
-                                    shelly.id.clone(),
-                                    Device {
+                            match list.into_iter().find(|x| x.id == shelly.id) {
+                                Some(dev) => {
+                                    dev.last_message = Utc::now();
+                                    println!(
+                                        "{} already exists\nUpdate not jet implemented",
+                                        dev.id
+                                    );
+                                }
+                                None => {
+                                    list.push(Device {
+                                        id: shelly.id.clone(),
                                         last_message: Utc::now(),
                                         subdevice: ShellyType(shelly),
-                                    },
-                                );
+                                    });
+                                }
                             }
                         }
                     }

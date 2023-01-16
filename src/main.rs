@@ -2,7 +2,7 @@ use actix_files as fs;
 use actix_web::{get, App, HttpResponse, HttpServer, Responder};
 use home_center::{devices::SENSOR_LIST, mqtt};
 use rumqttc::QoS;
-use std::{collections::HashMap, time::Duration};
+use std::{ time::Duration};
 use tokio::{self, task, time};
 
 #[tokio::main]
@@ -11,7 +11,7 @@ async fn main() {
         SENSOR_LIST
             .lock()
             .expect("could not lock")
-            .get_or_insert(HashMap::new());
+            .get_or_insert(Vec::new());
     }
     let (client, eventloop) = mqtt::init("rumqtt-async", "192.168.178.110", 1883);
 
@@ -42,7 +42,7 @@ async fn main() {
     http_handler.await.unwrap();
 }
 
-#[get("/api/")]
+#[get("/api/devices/")]
 async fn hello() -> impl Responder {
     match SENSOR_LIST.lock() {
         Ok(mut list_option) => {
