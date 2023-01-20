@@ -1,7 +1,8 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use super::shellies::Shelly;
+use super::shellies::{Shelly1, Shelly25Roller, ShellyDimmer};
+
 use std::{ sync::Mutex};
 
 type DeviceDataBase = Mutex<Option<Vec<Device>>>;
@@ -15,7 +16,10 @@ pub struct Device {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum DeviceType {
-    ShellyType(Shelly),
+    Shelly1Type(Shelly1),
+    Shelly25RollerType(Shelly25Roller),
+    ShellyDimmerType(ShellyDimmer),
+    Empty,
 }
 
 pub static SENSOR_LIST: DeviceDataBase = Mutex::new(None);

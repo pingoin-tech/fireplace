@@ -1,9 +1,12 @@
 use actix_files as fs;
 use actix_web::{get, App, HttpResponse, HttpServer, Responder};
-use home_center::{devices::SENSOR_LIST, mqtt};
+use home_center::{
+    devices::SENSOR_LIST,
+    eventhandler::{Handler, EVENT_HANDLER},
+    mqtt,
+};
 use rumqttc::QoS;
-use std::{ time::Duration};
-use tokio::{self, task, time};
+use tokio::{self, task};
 
 #[tokio::main]
 async fn main() {
@@ -13,6 +16,7 @@ async fn main() {
             .expect("could not lock")
             .get_or_insert(Vec::new());
     }
+
     let (client, eventloop) = mqtt::init("rumqtt-async", "192.168.178.110", 1883);
 
     client
@@ -20,7 +24,20 @@ async fn main() {
         .await
         .unwrap();
 
+    {
+        EVENT_HANDLER
+            .lock()
+            .expect("could not lock")
+            .get_or_insert(Handler::new(client).await);
+    }
+
     task::spawn(mqtt::work(eventloop));
+
+    {
+        if let Some(bla) =EVENT_HANDLER.lock().expect("msg").as_mut(){
+            bla.test_mqtt().await;
+        }
+    }
 
     let http_handler = HttpServer::new(|| {
         App::new()
@@ -31,13 +48,6 @@ async fn main() {
     .unwrap()
     .run();
 
-    for i in 0..10 {
-        client
-            .publish("hello/rumqtt", QoS::AtLeastOnce, false, vec![i; i as usize])
-            .await
-            .unwrap();
-        time::sleep(Duration::from_millis(100)).await;
-    }
     //mqtt_work_task.await.unwrap();
     http_handler.await.unwrap();
 }

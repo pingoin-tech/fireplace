@@ -6,7 +6,7 @@ use rumqttc::{
 };
 use rumqttc::mqttbytes::v4::Publish;
 use std::{time::Duration};
-use crate::shellies::decode_shelly_sub;
+use super::{shellies::decode_shelly_sub};
 
 
 pub fn init<S, T>(id: S, host: T, port: u16) -> (AsyncClient, EventLoop)
@@ -26,19 +26,20 @@ pub async fn work(mut eventloop: EventLoop) {
     while let Ok(notification) = eventloop.poll().await {
         match notification {
             Incoming(pack) => match pack {
-                Packet::Publish(content)=> decode_subsciptions(content),
+                Packet::Publish(content)=> {decode_subsciptions(content).await;},
                 _ => {}
             },
             Outgoing(_) => {}
         }
     }
+    ;
 }
 
-pub fn decode_subsciptions(content:Publish){
+pub async fn decode_subsciptions(content:Publish){
     let mut path=content.topic.split("/");
     match path.next() {
         Some("shellies")=>{
-            decode_shelly_sub(&content, path)
+            decode_shelly_sub(&content, path);
         },
         _=>{},
     }
