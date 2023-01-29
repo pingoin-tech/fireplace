@@ -1,12 +1,9 @@
-use super::devices::DeviceType;
-use crate::devices::Device;
+use super::devices::{self, Device, DeviceType};
 use chrono::Utc;
 use rumqttc::Publish;
 use serde::{Deserialize, Serialize};
 use serde_json::Error;
 use std::str::Split;
-
-use super::devices::SENSOR_LIST;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ShellyAnnounce {
@@ -20,51 +17,43 @@ pub struct ShellyAnnounce {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Shelly1 {
-    pub id: String,
-    pub ip: String,
+pub struct Shelly {
     pub fw_ver: String,
+    pub shelly_type: ShellyType,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Shelly25Roller {
-    pub id: String,
-    pub ip: String,
-    pub fw_ver: String,
+
+pub enum ShellyType {
+    Shelly1,
+    ShellyDimmer,
+    Shelly25Roller,
+    Shelly25Switch,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct ShellyDimmer {
-    pub id: String,
-    pub ip: String,
-    pub fw_ver: String,
-}
-
-impl Shelly1 {
-    fn from_announce(data: ShellyAnnounce) -> Shelly1 {
-        Shelly1 {
-            id: data.id,
-            ip: data.ip,
-            fw_ver: data.fw_ver,
+impl Shelly {
+    fn from_announce(data: ShellyAnnounce) -> Shelly {
+        let mut shelly_type = ShellyType::Shelly1;
+        match data.model.as_str() {
+            "SHSW-25" => {
+                if data.mode == Some(String::from("roller")) {
+                    shelly_type = ShellyType::Shelly25Roller;
+                } else {
+                    shelly_type = ShellyType::Shelly25Switch;
+                }
+            }
+            "SHSW-1" => {
+                shelly_type = ShellyType::Shelly1;
+            }
+            "SHDM-2" => {
+                shelly_type = ShellyType::ShellyDimmer;
+            }
+            _ => {}
         }
-    }
-}
-impl Shelly25Roller {
-    fn from_announce(data: ShellyAnnounce) -> Shelly25Roller {
-        Shelly25Roller {
-            id: data.id,
-            ip: data.ip,
-            fw_ver: data.fw_ver,
-        }
-    }
-}
 
-impl ShellyDimmer {
-    fn from_announce(data: ShellyAnnounce) -> ShellyDimmer {
-        ShellyDimmer {
-            id: data.id,
-            ip: data.ip,
+        Shelly {
             fw_ver: data.fw_ver,
+            shelly_type: shelly_type,
         }
     }
 }
@@ -72,57 +61,49 @@ impl ShellyDimmer {
 pub fn decode_shelly_sub(content: &Publish, mut path: Split<&str>) {
     match path.next() {
         Some("announce") => {
-            let dev_res: Result<ShellyAnnounce, Error> = serde_json::from_slice(&content.payload);
-            match dev_res {
-                Ok(device) => match SENSOR_LIST.lock() {
-                    Ok(mut list_option) => {
-                        if let Some(list) = list_option.as_mut() {
-                            match list.into_iter().find(|x| x.id == device.id) {
-                                Some(dev) => {
-                                    dev.last_message = Utc::now();
-                                    println!(
-                                        "{} already exists\nUpdate not jet implemented",
-                                        dev.id
-                                    );
-                                }
-                                None => {
-                                    let mut sub_device: DeviceType = DeviceType::Empty;
-                                    let id = device.id.clone();
-                                    match device.model.as_str() {
-                                        "SHSW-25" => {
-                                            if device.mode == Some(String::from("roller")) {
-                                                sub_device = DeviceType::Shelly25RollerType(
-                                                    Shelly25Roller::from_announce(device),
-                                                );
-                                            }
-                                        }
-                                        "SHSW-1" => {
-                                            sub_device = DeviceType::Shelly1Type(
-                                                Shelly1::from_announce(device),
-                                            )
-                                        }
-                                        "SHDM-2" => {
-                                            sub_device = DeviceType::ShellyDimmerType(
-                                                ShellyDimmer::from_announce(device),
-                                            )
-                                        }
-                                        _ => {}
-                                    }
-
-                                    list.push(Device {
-                                        id: id,
-                                        last_message: Utc::now(),
-                                        subdevice: sub_device,
-                                    });
-                                }
-                            }
-                        }
-                    }
-                    Err(err) => println!("{:?}", err),
-                },
-                Err(err) => println!("{:?}", err),
-            }
+            decode_announce(content);
         }
+        Some("command") => {}
+        Some(id) => match path.next() {
+            Some("announce") => {
+                decode_announce(content);
+            }
+            _ => {
+                devices::get_device_from_list(
+                    String::from(id),
+                    |dev| {
+                        dev.last_message = Utc::now();
+                        println!("State input: {}", dev.id);
+                    },
+                    |_| println!("Unknown device: {}", id),
+                );
+            }
+        },
         _ => {}
+    }
+}
+
+fn decode_announce(content: &Publish) {
+    let dev_res: Result<ShellyAnnounce, Error> = serde_json::from_slice(&content.payload);
+    match dev_res {
+        Ok(device) => devices::get_device_from_list(
+            device.id.clone(),
+            |dev| {
+                dev.last_message = Utc::now();
+                println!("{} already exists", dev.id);
+            },
+            |list| {
+                let id = device.id.clone();
+                let ip = device.ip.clone();
+                let sub_device = DeviceType::Shelly(Shelly::from_announce(device));
+                list.push(Device {
+                    id: id,
+                    ip: ip,
+                    last_message: Utc::now(),
+                    subdevice: sub_device,
+                });
+            },
+        ),
+        Err(err) => println!("{:?}", err),
     }
 }

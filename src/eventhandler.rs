@@ -18,7 +18,7 @@ impl Handler {
 
     pub async fn test_mqtt(&self) {
             self.client
-                .publish("hello/rumqtt", QoS::AtLeastOnce, false, vec![0x33; 9 as usize])
+                .publish("shellies/command", QoS::AtLeastOnce, false, "announce")
                 .await
                 .unwrap();
         
