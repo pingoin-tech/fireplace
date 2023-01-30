@@ -2,9 +2,9 @@ use crate::devices::{Device, DeviceType};
 
 use self::{incoming_data::{
     InputStat, LightStat, MeterStat, RelaysState, RollerStat, UpdateStat, WifiState,
-}, decodings::{decode_other, decode_relay}};
+}, decodings::{decode_other, decode_relay, decode_voltage}};
 
-use super::devices;
+use super::get_device_from_list;
 use chrono::Utc;
 use rumqttc::Publish;
 use serde::{Deserialize, Serialize};
@@ -29,6 +29,7 @@ pub struct Shelly {
     pub overtemperature: Option<bool>,
     pub overpower: Option<bool>,
     pub uptime: u32,
+    pub voltage:Option<f32>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
@@ -73,6 +74,7 @@ impl Shelly {
             rollers: None,
             overtemperature: None,
             overpower: None,
+            voltage:None,
         }
     }
 }
@@ -91,7 +93,8 @@ pub fn decode_shelly_sub(content: &Publish, mut path: Split<&str>) {
             Some("online") => {}
             Some("relay")=> decode_relay(content,String::from(id), path),
             Some("info") => decode_info(content, String::from(id)),
-            Some(path) => decode_other(path, String::from(id)),
+            Some("voltage")=>decode_voltage(content, String::from(id)),
+            Some(path) => decode_other(path, String::from(id),content),
             None => {}
         },
         _ => {}
@@ -104,7 +107,7 @@ where
     Fs: FnOnce(&mut Shelly),
     Ff: FnOnce(&mut Vec<Device>),
 {
-    devices::get_device_from_list(
+    get_device_from_list(
         id,
         |device| {
             device.last_message = Utc::now();

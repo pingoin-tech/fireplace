@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-
-use super::shellies::Shelly;
+pub mod shellies;
+use shellies::Shelly;
 
 use std::sync::Mutex;
 

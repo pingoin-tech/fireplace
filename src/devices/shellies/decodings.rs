@@ -1,18 +1,21 @@
 use std::{str, str::Split};
 
-use super::{
-    devices::{self, Device, DeviceType},
-    incoming_data::{ShellyAnnounce, ShellyInfo},
-    Shelly,
-};
 use chrono::Utc;
 use rumqttc::Publish;
 use serde_json::Error;
+use std::str::FromStr;
+
+use crate::devices::{get_device_from_list, Device, DeviceType};
+
+use super::{
+    incoming_data::{ShellyAnnounce, ShellyInfo},
+    Shelly,
+};
 
 pub fn decode_announce(content: &Publish) {
     let dev_res: Result<ShellyAnnounce, Error> = serde_json::from_slice(&content.payload);
     match dev_res {
-        Ok(device) => devices::get_device_from_list(
+        Ok(device) => get_device_from_list(
             device.id.clone(),
             |dev| {
                 dev.last_message = Utc::now();
@@ -58,15 +61,25 @@ pub fn decode_info(content: &Publish, id: String) {
     }
 }
 
-pub fn decode_other(path: &str, id: String) {
-    devices::get_device_from_list(
+pub fn decode_other(path: &str, id: String, content: &Publish) {
+    get_device_from_list(
         id.clone(),
         |dev| {
             dev.last_message = Utc::now();
-            println!("State input: {}/{}", dev.id, path);
+            println!("State input: {}/{}: {:?}", dev.id, path, content.payload);
         },
-        |_| println!("Unknown device: {}/{}", id, path),
+        |_| println!("Unknown device: {}/{}: {:?}", id, path, content.payload),
     );
+}
+
+pub fn decode_voltage(content: &Publish, id: String){
+    if let Ok(string) = str::from_utf8(&content.payload) {
+        if let Ok(val) = f32::from_str(string){
+            super::open_shelly_fom_list(id, |shelly|{
+                shelly.voltage=Some(val);
+            }, |_|{})
+        }
+    }
 }
 
 pub fn decode_relay(content: &Publish, id: String, mut path: Split<&str>) {
@@ -85,17 +98,17 @@ pub fn decode_relay(content: &Publish, id: String, mut path: Split<&str>) {
                     if let Some(relay) = relay_arr.get_mut(index) {
                         match lower {
                             Ok("on") => {
-                                relay.ison=true;
-                                relay.overpower=Some(false);
-                            },
+                                relay.ison = true;
+                                relay.overpower = Some(false);
+                            }
                             Ok("off") => {
-                                relay.ison=false;
-                                relay.overpower=Some(false);
-                            },
+                                relay.ison = false;
+                                relay.overpower = Some(false);
+                            }
                             Ok("overpower") => {
-                                relay.ison=false;
-                                relay.overpower=Some(true);
-                            },
+                                relay.ison = false;
+                                relay.overpower = Some(true);
+                            }
                             _ => {}
                         };
                     }

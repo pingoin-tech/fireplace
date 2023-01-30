@@ -23,4 +23,11 @@ impl Handler {
                 .unwrap();
         
     }
+
+    pub async fn trigger_event(_event_string:String){
+    }
+
+    pub async fn force_action(_action_string:String)->bool{
+        false
+    }
 }
