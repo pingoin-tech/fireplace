@@ -1,28 +1,37 @@
-use super::devices::{self, Device, DeviceType};
+use crate::devices::{Device, DeviceType};
+
+use self::{incoming_data::{
+    InputStat, LightStat, MeterStat, RelaysState, RollerStat, UpdateStat, WifiState,
+}, decodings::{decode_other, decode_relay}};
+
+use super::devices;
 use chrono::Utc;
 use rumqttc::Publish;
 use serde::{Deserialize, Serialize};
-use serde_json::Error;
 use std::str::Split;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct ShellyAnnounce {
-    pub id: String,
-    pub model: String,
-    pub mac: String,
-    pub ip: String,
-    pub new_fw: bool,
-    pub fw_ver: String,
-    pub mode: Option<String>,
-}
+mod incoming_data;
+mod decodings;
+use incoming_data::{ShellyAnnounce};
+use decodings::{decode_announce,decode_info};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Shelly {
     pub fw_ver: String,
     pub shelly_type: ShellyType,
+    pub wifi_sta: WifiState,
+    pub relays: Option<Vec<RelaysState>>,
+    pub lights: Option<Vec<LightStat>>,
+    pub rollers: Option<Vec<RollerStat>>,
+    pub update: UpdateStat,
+    pub meters: Vec<MeterStat>,
+    pub inputs: Vec<InputStat>,
+    pub overtemperature: Option<bool>,
+    pub overpower: Option<bool>,
+    pub uptime: u32,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 
 pub enum ShellyType {
     Shelly1,
@@ -54,6 +63,16 @@ impl Shelly {
         Shelly {
             fw_ver: data.fw_ver,
             shelly_type: shelly_type,
+            wifi_sta: WifiState::default(),
+            relays: None,
+            update: UpdateStat::default(),
+            meters: Vec::new(),
+            inputs: Vec::new(),
+            uptime: 0,
+            lights: None,
+            rollers: None,
+            overtemperature: None,
+            overpower: None,
         }
     }
 }
@@ -68,42 +87,35 @@ pub fn decode_shelly_sub(content: &Publish, mut path: Split<&str>) {
             Some("announce") => {
                 decode_announce(content);
             }
-            _ => {
-                devices::get_device_from_list(
-                    String::from(id),
-                    |dev| {
-                        dev.last_message = Utc::now();
-                        println!("State input: {}", dev.id);
-                    },
-                    |_| println!("Unknown device: {}", id),
-                );
-            }
+            Some("command") => {}
+            Some("online") => {}
+            Some("relay")=> decode_relay(content,String::from(id), path),
+            Some("info") => decode_info(content, String::from(id)),
+            Some(path) => decode_other(path, String::from(id)),
+            None => {}
         },
         _ => {}
     }
 }
 
-fn decode_announce(content: &Publish) {
-    let dev_res: Result<ShellyAnnounce, Error> = serde_json::from_slice(&content.payload);
-    match dev_res {
-        Ok(device) => devices::get_device_from_list(
-            device.id.clone(),
-            |dev| {
-                dev.last_message = Utc::now();
-                println!("{} already exists", dev.id);
-            },
-            |list| {
-                let id = device.id.clone();
-                let ip = device.ip.clone();
-                let sub_device = DeviceType::Shelly(Shelly::from_announce(device));
-                list.push(Device {
-                    id: id,
-                    ip: ip,
-                    last_message: Utc::now(),
-                    subdevice: sub_device,
-                });
-            },
-        ),
-        Err(err) => println!("{:?}", err),
-    }
+
+pub fn open_shelly_fom_list<Fs, Ff>(id: String, found: Fs, not_found: Ff)
+where
+    Fs: FnOnce(&mut Shelly),
+    Ff: FnOnce(&mut Vec<Device>),
+{
+    devices::get_device_from_list(
+        id,
+        |device| {
+            device.last_message = Utc::now();
+            let sub_dev = &mut device.subdevice;
+            match sub_dev {
+                DeviceType::Shelly(shel) => {
+                    found(shel)
+                }
+                _ => {}
+            }
+        },
+        not_found,
+    );
 }
