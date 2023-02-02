@@ -1,19 +1,22 @@
-use crate::devices::{Device, DeviceType};
+use crate::{devices::{Device, DeviceType}, eventhandler::ActionType};
 
-use self::{incoming_data::{
-    InputStat, LightStat, MeterStat, RelaysState, RollerStat, UpdateStat, WifiState,
-}, decodings::{decode_other, decode_relay, decode_voltage}};
+use self::{
+    decodings::{decode_other, decode_relay, decode_voltage},
+    incoming_data::{
+        InputStat, LightStat, MeterStat, RelaysState, RollerStat, UpdateStat, WifiState,
+    },
+};
 
 use super::get_device_from_list;
 use chrono::Utc;
-use rumqttc::Publish;
+use rumqttc::{Publish};
 use serde::{Deserialize, Serialize};
 use std::str::Split;
 
-mod incoming_data;
 mod decodings;
-use incoming_data::{ShellyAnnounce};
-use decodings::{decode_announce,decode_info};
+mod incoming_data;
+use decodings::{decode_announce, decode_info};
+use incoming_data::ShellyAnnounce;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Shelly {
@@ -29,7 +32,7 @@ pub struct Shelly {
     pub overtemperature: Option<bool>,
     pub overpower: Option<bool>,
     pub uptime: u32,
-    pub voltage:Option<f32>,
+    pub voltage: Option<f32>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
@@ -42,6 +45,20 @@ pub enum ShellyType {
 }
 
 impl Shelly {
+    pub fn trigger_action(
+        &mut self,
+        action_path: String,
+        id: String,
+    ) -> ActionType {
+        let base_path=format!("shellies/{}/",id);
+        let mut splitted=action_path.split("/");
+
+        match splitted.next() {
+            Some("announce")=>ActionType::MqttAction(format!("{}command",base_path), String::from("announce")),
+            _=>ActionType::NotAvailable,
+        }
+    }
+
     fn from_announce(data: ShellyAnnounce) -> Shelly {
         let mut shelly_type = ShellyType::Shelly1;
         match data.model.as_str() {
@@ -74,7 +91,7 @@ impl Shelly {
             rollers: None,
             overtemperature: None,
             overpower: None,
-            voltage:None,
+            voltage: None,
         }
     }
 }
@@ -91,16 +108,15 @@ pub fn decode_shelly_sub(content: &Publish, mut path: Split<&str>) {
             }
             Some("command") => {}
             Some("online") => {}
-            Some("relay")=> decode_relay(content,String::from(id), path),
+            Some("relay") => decode_relay(content, String::from(id), path),
             Some("info") => decode_info(content, String::from(id)),
-            Some("voltage")=>decode_voltage(content, String::from(id)),
-            Some(path) => decode_other(path, String::from(id),content),
+            Some("voltage") => decode_voltage(content, String::from(id)),
+            Some(path) => decode_other(path, String::from(id), content),
             None => {}
         },
         _ => {}
     }
 }
-
 
 pub fn open_shelly_fom_list<Fs, Ff>(id: String, found: Fs, not_found: Ff)
 where
@@ -113,12 +129,11 @@ where
             device.last_message = Utc::now();
             let sub_dev = &mut device.subdevice;
             match sub_dev {
-                DeviceType::Shelly(shel) => {
-                    found(shel)
-                }
+                DeviceType::Shelly(shel) => found(shel),
                 _ => {}
             }
         },
         not_found,
+        ()
     );
 }

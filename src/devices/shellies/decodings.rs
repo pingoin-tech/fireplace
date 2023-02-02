@@ -31,6 +31,7 @@ pub fn decode_announce(content: &Publish) {
                     subdevice: sub_device,
                 });
             },
+            ()
         ),
         Err(err) => println!("{:?}", err),
     }
@@ -69,6 +70,7 @@ pub fn decode_other(path: &str, id: String, content: &Publish) {
             println!("State input: {}/{}: {:?}", dev.id, path, content.payload);
         },
         |_| println!("Unknown device: {}/{}: {:?}", id, path, content.payload),
+        ()
     );
 }
 
