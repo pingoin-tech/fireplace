@@ -1,4 +1,4 @@
-use std::{sync::Mutex};
+use std::sync::Mutex;
 
 use rumqttc::{AsyncClient, QoS};
 use tokio::time::{sleep, Duration};
@@ -11,11 +11,17 @@ pub static EVENT_HANDLER: EventHandler = Mutex::new(None);
 
 pub struct Handler {
     client: AsyncClient,
+    event_buffer: Vec<String>,
+    action_buffer: Vec<ActionType>,
 }
 
 impl Handler {
     pub async fn new(client: AsyncClient) -> Self {
-        let handle = Handler { client: client };
+        let handle = Handler {
+            client: client,
+            event_buffer: Vec::new(),
+            action_buffer: Vec::new(),
+        };
         return handle;
     }
 
@@ -25,13 +31,14 @@ impl Handler {
             .await
             .unwrap();
         sleep(Duration::from_millis(1000)).await;
-        self.force_action(String::from("schlafenEltern-lichtSchalter/announce"))
-            .await;
+        self.force_action(String::from("schlafenEltern-lichtSchalter/announce"));
     }
 
-    pub async fn trigger_event(&self, event_string: String) {}
+    pub async fn trigger_event(&mut self, event_string: String) {
+        self.event_buffer.push(event_string);
+    }
 
-    pub async fn force_action(&mut self, action_string: String) -> bool {
+    pub fn force_action(&mut self, action_string: String) -> bool {
         let (first, path) = split_action_string(action_string);
         let action = if let Some(id) = first {
             devices::get_device_from_list(
@@ -44,24 +51,37 @@ impl Handler {
             ActionType::NotAvailable
         };
 
-        match action {
-            ActionType::NotAvailable => false,
-            ActionType::MqttAction(topic, payload) => {
-                match self
-                    .client
-                    .publish(topic, QoS::AtLeastOnce, false, payload)
-                    .await
-                {
-                    Ok(_) => {
-                        true
-                    },
-                    Err(err) => {
-                        print!("{}", err);
-                        false
+        self.action_buffer.push(action.clone());
+
+        if action == ActionType::NotAvailable {
+            false
+        } else {
+            true
+        }
+    }
+
+    async fn work_action(&mut self) {
+        if let Some(action) = self.action_buffer.pop() {
+            match action {
+                ActionType::NotAvailable => {}
+                ActionType::MqttAction(topic, payload) => {
+                    match self
+                        .client
+                        .publish(topic, QoS::AtLeastOnce, false, payload)
+                        .await
+                    {
+                        Ok(_) => {}
+                        Err(err) => {
+                            print!("{}", err);
+                        }
                     }
                 }
             }
         }
+    }
+
+    pub async fn work(&mut self) {
+        self.work_action().await;
     }
 }
 
@@ -72,16 +92,29 @@ pub fn split_action_string(action_string: String) -> (Option<String>, String) {
         first = Some(String::from(str_val));
     }
 
-    let mut result:String={path.map(|s| String::from(format!("{}/", s))).collect()};
+    let mut result: String = { path.map(|s| String::from(format!("{}/", s))).collect() };
     result.pop();
 
-    (
-        first,
-        result,
-    )
+    (first, result)
 }
 
+#[derive(PartialEq, Clone)]
 pub enum ActionType {
     NotAvailable,
     MqttAction(String, String),
+}
+
+pub fn get_event_handler<Fs, T>(found: Fs, error_val: T) -> T
+where
+    Fs: FnOnce(&mut Handler) -> T,
+{
+    if let Ok(mut handler_option) = EVENT_HANDLER.lock() {
+        if let Some(handler) = handler_option.as_mut() {
+            found(handler)
+        } else {
+            error_val
+        }
+    } else {
+        error_val
+    }
 }
