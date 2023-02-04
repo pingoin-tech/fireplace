@@ -38,7 +38,7 @@ async fn main() {
 
     {
         if let Some(handler) = EVENT_HANDLER.lock().expect("locking failed").as_mut() {
-            handler.test_mqtt().await;
+            handler.init_devices().await;
         }
     }
 

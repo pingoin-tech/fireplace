@@ -5,7 +5,7 @@ use rumqttc::Publish;
 use serde_json::Error;
 use std::str::FromStr;
 
-use crate::devices::{get_device_from_list, Device, DeviceType};
+use crate::{devices::{get_device_from_list, Device, DeviceType}, eventhandler::get_event_handler};
 
 use super::{
     incoming_data::{ShellyAnnounce, ShellyInfo},
@@ -23,12 +23,15 @@ pub fn decode_announce(content: &Publish) {
             |list| {
                 let id = device.id.clone();
                 let ip = device.ip.clone();
-                let sub_device = DeviceType::Shelly(Shelly::from_announce(device));
+                let (shelly,actions,events)=Shelly::from_announce(device);
+                let sub_device = DeviceType::Shelly(shelly);
                 list.push(Device {
                     id: id,
                     ip: ip,
                     last_message: Utc::now(),
                     subdevice: sub_device,
+                    available_actions:actions,
+                    available_events: events,
                 });
             },
             ()
@@ -94,7 +97,7 @@ pub fn decode_relay(content: &Publish, id: String, mut path: Split<&str>) {
     if let Some(index) = index_op {
         let lower = str::from_utf8(&content.payload);
         super::open_shelly_fom_list(
-            id,
+            id.clone(),
             |shelly| {
                 if let Some(relay_arr) = &mut shelly.relays {
                     if let Some(relay) = relay_arr.get_mut(index) {
@@ -119,4 +122,12 @@ pub fn decode_relay(content: &Publish, id: String, mut path: Split<&str>) {
             |_| {},
         );
     }
+    trigger_new_data(id)
+}
+
+
+fn trigger_new_data(id: String){
+    get_event_handler(|handler|{
+        handler.trigger_event(format!("{}/new_data",id))
+    },())
 }

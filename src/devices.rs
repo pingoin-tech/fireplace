@@ -15,6 +15,8 @@ pub struct Device {
     pub ip: String,
     pub last_message: DateTime<Utc>,
     pub subdevice: DeviceType,
+    pub available_actions: Vec<String>,
+    pub available_events: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

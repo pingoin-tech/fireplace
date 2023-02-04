@@ -25,7 +25,7 @@ impl Handler {
         return handle;
     }
 
-    pub async fn test_mqtt(&mut self) {
+    pub async fn init_devices(&mut self) {
         self.client
             .publish("shellies/command", QoS::AtLeastOnce, false, "announce")
             .await
@@ -34,7 +34,7 @@ impl Handler {
         self.force_action(String::from("schlafenEltern-lichtSchalter/announce"));
     }
 
-    pub async fn trigger_event(&mut self, event_string: String) {
+    pub fn trigger_event(&mut self, event_string: String) {
         self.event_buffer.push(event_string);
     }
 
@@ -81,6 +81,7 @@ impl Handler {
     }
 
     pub async fn work(&mut self) {
+        self.event_buffer.pop();
         self.work_action().await;
     }
 }

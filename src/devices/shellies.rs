@@ -59,8 +59,11 @@ impl Shelly {
         }
     }
 
-    fn from_announce(data: ShellyAnnounce) -> Shelly {
+    fn from_announce(data: ShellyAnnounce) -> (Shelly,Vec<String>,Vec<String>) {
         let mut shelly_type = ShellyType::Shelly1;
+
+        let actions=vec!["announce".to_string()];
+        let events=vec!["new_data".to_string()];
         match data.model.as_str() {
             "SHSW-25" => {
                 if data.mode == Some(String::from("roller")) {
@@ -78,7 +81,8 @@ impl Shelly {
             _ => {}
         }
 
-        Shelly {
+        (
+            Shelly {
             fw_ver: data.fw_ver,
             shelly_type: shelly_type,
             wifi_sta: WifiState::default(),
@@ -92,7 +96,10 @@ impl Shelly {
             overtemperature: None,
             overpower: None,
             voltage: None,
-        }
+        },
+        actions,
+        events
+    )
     }
 }
 
