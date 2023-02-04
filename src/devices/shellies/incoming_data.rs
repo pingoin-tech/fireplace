@@ -8,6 +8,7 @@ pub struct ShellyAnnounce {
     pub ip: String,
     pub new_fw: bool,
     pub fw_ver: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub mode: Option<String>,
 }
 
@@ -29,6 +30,7 @@ pub struct RelaysState {
     timer_duration: i32,
     timer_remaining: i32,
     source: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub overpower: Option<bool>,
 }
 
@@ -36,9 +38,13 @@ pub struct RelaysState {
 #[ts(export)]
 pub struct MeterStat {
     power: f32,
+    #[serde(skip_serializing_if = "Option::is_none")]
     overpower: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     timestamp: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     counters: Option<Vec<f32>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     total: Option<f32>,
     is_valid: bool,
 }
@@ -107,14 +113,20 @@ pub struct ShellyInfo {
     unixtime: u64,
     has_update: bool,
     mac: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub relays: Option<Vec<RelaysState>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub lights: Option<Vec<LightStat>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub rollers: Option<Vec<RollerStat>>,
     pub meters: Vec<MeterStat>,
     pub inputs: Vec<InputStat>,
     pub update: UpdateStat,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub tmp: Option<TemperatureStat>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub overtemperature: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub overpower: Option<bool>,
     ram_total: u32,
     ram_free: u32,

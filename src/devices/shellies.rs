@@ -27,15 +27,21 @@ pub struct Shelly {
     pub fw_ver: String,
     pub shelly_type: ShellyType,
     pub wifi_sta: WifiState,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub relays: Option<Vec<RelaysState>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub lights: Option<Vec<LightStat>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub rollers: Option<Vec<RollerStat>>,
     pub update: UpdateStat,
     pub meters: Vec<MeterStat>,
     pub inputs: Vec<InputStat>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub overtemperature: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub overpower: Option<bool>,
     pub uptime: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub voltage: Option<f32>,
 }
 
