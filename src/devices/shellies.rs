@@ -1,15 +1,18 @@
-use crate::{devices::{Device, DeviceType}, eventhandler::ActionType};
-
 use self::{
     decodings::{decode_other, decode_relay, decode_voltage},
     incoming_data::{
         InputStat, LightStat, MeterStat, RelaysState, RollerStat, UpdateStat, WifiState,
     },
 };
+use crate::{
+    devices::{Device, DeviceType},
+    eventhandler::ActionType,
+};
+use ts_rs::TS;
 
 use super::get_device_from_list;
 use chrono::Utc;
-use rumqttc::{Publish};
+use rumqttc::Publish;
 use serde::{Deserialize, Serialize};
 use std::str::Split;
 
@@ -18,7 +21,8 @@ mod incoming_data;
 use decodings::{decode_announce, decode_info};
 use incoming_data::ShellyAnnounce;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, TS)]
+#[ts(export)]
 pub struct Shelly {
     pub fw_ver: String,
     pub shelly_type: ShellyType,
@@ -35,8 +39,8 @@ pub struct Shelly {
     pub voltage: Option<f32>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
-
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, TS)]
+#[ts(export)]
 pub enum ShellyType {
     Shelly1,
     ShellyDimmer,
@@ -45,25 +49,23 @@ pub enum ShellyType {
 }
 
 impl Shelly {
-    pub fn trigger_action(
-        &mut self,
-        action_path: String,
-        id: String,
-    ) -> ActionType {
-        let base_path=format!("shellies/{}/",id);
-        let mut splitted=action_path.split("/");
+    pub fn trigger_action(&mut self, action_path: String, id: String) -> ActionType {
+        let base_path = format!("shellies/{}/", id);
+        let mut splitted = action_path.split("/");
 
         match splitted.next() {
-            Some("announce")=>ActionType::MqttAction(format!("{}command",base_path), String::from("announce")),
-            _=>ActionType::NotAvailable,
+            Some("announce") => {
+                ActionType::MqttAction(format!("{}command", base_path), String::from("announce"))
+            }
+            _ => ActionType::NotAvailable,
         }
     }
 
-    fn from_announce(data: ShellyAnnounce) -> (Shelly,Vec<String>,Vec<String>) {
+    fn from_announce(data: ShellyAnnounce) -> (Shelly, Vec<String>, Vec<String>) {
         let mut shelly_type = ShellyType::Shelly1;
 
-        let actions=vec!["announce".to_string()];
-        let events=vec!["new_data".to_string()];
+        let actions = vec!["announce".to_string()];
+        let events = vec!["new_data".to_string()];
         match data.model.as_str() {
             "SHSW-25" => {
                 if data.mode == Some(String::from("roller")) {
@@ -83,23 +85,23 @@ impl Shelly {
 
         (
             Shelly {
-            fw_ver: data.fw_ver,
-            shelly_type: shelly_type,
-            wifi_sta: WifiState::default(),
-            relays: None,
-            update: UpdateStat::default(),
-            meters: Vec::new(),
-            inputs: Vec::new(),
-            uptime: 0,
-            lights: None,
-            rollers: None,
-            overtemperature: None,
-            overpower: None,
-            voltage: None,
-        },
-        actions,
-        events
-    )
+                fw_ver: data.fw_ver,
+                shelly_type: shelly_type,
+                wifi_sta: WifiState::default(),
+                relays: None,
+                update: UpdateStat::default(),
+                meters: Vec::new(),
+                inputs: Vec::new(),
+                uptime: 0,
+                lights: None,
+                rollers: None,
+                overtemperature: None,
+                overpower: None,
+                voltage: None,
+            },
+            actions,
+            events,
+        )
     }
 }
 
@@ -141,6 +143,6 @@ where
             }
         },
         not_found,
-        ()
+        (),
     );
 }

@@ -31,8 +31,13 @@ An installed rust-toolchain. Look at <https://rustup.rs/>.
    ```sh
    git clone https://github.com/pingoin-tech/home_center.git
    ```
+2. Create Type-Bindings for frontend
 
-2. Compile from source
+    ``` sh
+    cargo test
+    ```
+
+3. Compile from source
 
     ```sh
     cargo build --release

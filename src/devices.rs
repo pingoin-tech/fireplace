@@ -2,14 +2,16 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 pub mod shellies;
 use shellies::Shelly;
+use ts_rs::TS;
 
-use std::{sync::Mutex};
+use std::sync::Mutex;
 
 use crate::eventhandler::ActionType;
 
 type DeviceDataBase = Mutex<Option<Vec<Device>>>;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, TS)]
+#[ts(export)]
 pub struct Device {
     pub id: String,
     pub ip: String,
@@ -19,7 +21,9 @@ pub struct Device {
     pub available_events: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, TS)]
+#[serde(tag = "type", rename_all = "snake_case")]
+#[ts(export)]
 pub enum DeviceType {
     Shelly(Shelly),
     Empty,
@@ -27,10 +31,10 @@ pub enum DeviceType {
 
 pub static SENSOR_LIST: DeviceDataBase = Mutex::new(None);
 
-pub fn get_device_from_list<Fs, Ff,T>(id: String, found: Fs, not_found: Ff,error_val:T)->T
+pub fn get_device_from_list<Fs, Ff, T>(id: String, found: Fs, not_found: Ff, error_val: T) -> T
 where
-    Fs: FnOnce(&mut Device)->T,
-    Ff: FnOnce(&mut Vec<Device>)->T,
+    Fs: FnOnce(&mut Device) -> T,
+    Ff: FnOnce(&mut Vec<Device>) -> T,
 {
     if let Ok(mut list_option) = SENSOR_LIST.lock() {
         if let Some(list) = list_option.as_mut() {
@@ -38,23 +42,19 @@ where
                 Some(device) => found(device),
                 None => not_found(list),
             }
-        }else{
+        } else {
             error_val
         }
-    }else{
+    } else {
         error_val
     }
 }
 
-
 impl Device {
-    pub fn trigger_action(&mut self,action_path:String)->ActionType{
+    pub fn trigger_action(&mut self, action_path: String) -> ActionType {
         match &mut self.subdevice {
-            DeviceType::Shelly(device) => {
-                device.trigger_action(action_path, self.id.clone())
-            },
+            DeviceType::Shelly(device) => device.trigger_action(action_path, self.id.clone()),
             DeviceType::Empty => ActionType::NotAvailable,
         }
-    }  
+    }
 }
-

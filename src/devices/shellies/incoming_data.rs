@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ShellyAnnounce {
     pub id: String,
@@ -10,7 +11,8 @@ pub struct ShellyAnnounce {
     pub mode: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]
+#[ts(export)]
 pub struct WifiState {
     connected: bool,
     ssid: String,
@@ -18,7 +20,8 @@ pub struct WifiState {
     rssi: i16,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]
+#[ts(export)]
 pub struct RelaysState {
     pub ison: bool,
     has_timer: bool,
@@ -29,7 +32,8 @@ pub struct RelaysState {
     pub overpower: Option<bool>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]
+#[ts(export)]
 pub struct MeterStat {
     power: f32,
     overpower: Option<f32>,
@@ -39,14 +43,16 @@ pub struct MeterStat {
     is_valid: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]
+#[ts(export)]
 pub struct InputStat {
     input: u8,
     event: String,
     event_cnt: u32,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]
+#[ts(export)]
 pub struct UpdateStat {
     status: String,
     has_update: bool,
@@ -54,7 +60,8 @@ pub struct UpdateStat {
     old_version: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]
+#[ts(export)]
 pub struct LightStat {
     ison: bool,
     source: String,
@@ -66,16 +73,18 @@ pub struct LightStat {
     brightness: u8,
     transition: u16,
 }
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]
+#[ts(export)]
 pub struct TemperatureStat {
-    #[serde(alias = "tC")]
+    #[serde(rename = "tC")]
     t_c: f32,
-    #[serde(alias = "tF")]
+    #[serde(rename = "tF")]
     t_f: f32,
     is_valid: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]
+#[ts(export)]
 pub struct RollerStat {
     state: String,
     source: String,
@@ -90,7 +99,8 @@ pub struct RollerStat {
     positioning: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]
+#[ts(export)]
 pub struct ShellyInfo {
     pub wifi_sta: WifiState,
     time: String,
