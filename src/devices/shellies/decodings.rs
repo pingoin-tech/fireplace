@@ -32,6 +32,7 @@ pub fn decode_announce(content: &Publish) {
                     subdevice: sub_device,
                     available_actions:actions,
                     available_events: events,
+                    rssi:0,
                 });
             },
             ()
@@ -44,22 +45,25 @@ pub fn decode_info(content: &Publish, id: String) {
     let dev_res: Result<ShellyInfo, Error> = serde_json::from_slice(&content.payload);
     match dev_res {
         Ok(info_data) => {
-            super::open_shelly_fom_list(
-                id,
-                |shel| {
-                    shel.wifi_sta = info_data.wifi_sta;
-                    shel.inputs = info_data.inputs;
-                    shel.meters = info_data.meters;
-                    shel.relays = info_data.relays;
-                    shel.update = info_data.update;
-                    shel.uptime = info_data.uptime;
-                    shel.lights = info_data.lights;
-                    shel.rollers = info_data.rollers;
-                    shel.overpower = info_data.overpower;
-                    shel.overtemperature = info_data.overtemperature;
-                },
-                |_| {},
-            );
+            get_device_from_list(id.clone(),|device|{
+                device.rssi=info_data.wifi_sta.rssi;
+                match &mut device.subdevice {
+                    DeviceType::Shelly(shel)=>{
+                        shel.inputs = info_data.inputs;
+                        shel.meters = info_data.meters;
+                        shel.relays = info_data.relays;
+                        shel.update = info_data.update;
+                        shel.uptime = info_data.uptime;
+                        shel.lights = info_data.lights;
+                        shel.rollers = info_data.rollers;
+                        shel.overpower = info_data.overpower;
+                        shel.overtemperature = info_data.overtemperature;
+                    },
+                    _=>{}
+                };
+
+
+            },|_|{()},());
         }
         Err(err) => println!("{:?}", err),
     }

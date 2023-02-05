@@ -1,7 +1,21 @@
 <script setup lang="ts">
-
+import { useDeviceStore } from "./stores/devices";
 import ReloadPWA from "./components/ReloadPWA.vue";
 import { RouterLink, RouterView } from 'vue-router'
+import { onMounted } from "vue";
+
+const store = useDeviceStore()
+const { refresh } = store;
+
+refresh();
+
+onMounted(() => {
+  setInterval(()=>{
+    refresh();
+  },1000)
+})
+
+
 </script>
 
 <template>

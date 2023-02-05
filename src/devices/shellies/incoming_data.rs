@@ -18,7 +18,7 @@ pub struct WifiState {
     connected: bool,
     ssid: String,
     ip: String,
-    rssi: i16,
+    pub rssi: i16,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]

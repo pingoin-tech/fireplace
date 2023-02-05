@@ -6,11 +6,6 @@ import DeviceView from '../components/DeviceView.vue';
 
 const store = useDeviceStore()
 const { devices } = storeToRefs(store);
-const { refresh } = store;
-
-onMounted(async () => {
-  refresh()
-})
 
 </script>
 
@@ -23,6 +18,7 @@ onMounted(async () => {
         <tr>
           <th>id</th>
           <th>ip</th>
+          <th>RSSI</th>
           <th>sub-device</th>
           <th>actions</th>
         </tr>

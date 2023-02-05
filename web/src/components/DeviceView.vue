@@ -23,7 +23,8 @@ let action = (action: string) => {
     <td>
       {{ dev.id }}
     </td>
-    <td>{{ dev.ip }}</td>
+    <td><a :href="'http://' + dev.ip" target="_blank">{{ dev.ip }}</a></td>
+    <td>{{ dev.rssi }}</td>
     <td>
       <ul>
         <li>

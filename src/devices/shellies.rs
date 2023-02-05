@@ -1,7 +1,7 @@
 use self::{
     decodings::{decode_other, decode_relay, decode_voltage},
     incoming_data::{
-        InputStat, LightStat, MeterStat, RelaysState, RollerStat, UpdateStat, WifiState,
+        InputStat, LightStat, MeterStat, RelaysState, RollerStat, UpdateStat,
     },
 };
 use crate::{
@@ -26,7 +26,6 @@ use incoming_data::ShellyAnnounce;
 pub struct Shelly {
     pub fw_ver: String,
     pub shelly_type: ShellyType,
-    pub wifi_sta: WifiState,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub relays: Option<Vec<RelaysState>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -57,11 +56,15 @@ pub enum ShellyType {
 impl Shelly {
     pub fn trigger_action(&mut self, action_path: String, id: String) -> ActionType {
         let base_path = format!("shellies/{}/", id);
+        println!("{}",action_path.clone());
         let mut splitted = action_path.split("/");
 
         match splitted.next() {
             Some("announce") => {
                 ActionType::MqttAction(format!("{}command", base_path), String::from("announce"))
+            }
+            Some("update") => {
+                ActionType::MqttAction(format!("{}command", base_path), String::from("update"))
             }
             _ => ActionType::NotAvailable,
         }
@@ -70,7 +73,7 @@ impl Shelly {
     fn from_announce(data: ShellyAnnounce) -> (Shelly, Vec<String>, Vec<String>) {
         let mut shelly_type = ShellyType::Shelly1;
 
-        let actions = vec!["announce".to_string()];
+        let actions = vec!["announce".to_string(),"update".to_string()];
         let events = vec!["new_data".to_string()];
         match data.model.as_str() {
             "SHSW-25" => {
@@ -93,7 +96,6 @@ impl Shelly {
             Shelly {
                 fw_ver: data.fw_ver,
                 shelly_type: shelly_type,
-                wifi_sta: WifiState::default(),
                 relays: None,
                 update: UpdateStat::default(),
                 meters: Vec::new(),
