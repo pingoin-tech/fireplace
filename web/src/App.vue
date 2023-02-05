@@ -1,31 +1,29 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue';
+
 import ReloadPWA from "./components/ReloadPWA.vue";
+import { RouterLink, RouterView } from 'vue-router'
 </script>
 
 <template>
   <ReloadPWA />
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <HelloWorld msg="Vite + Vue" />
-</template>
+  <header>
+    <div id="header_left">
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>
+    </div>
+    <div id="header_middle">
+      Home Center
+    </div>
+    <div id="header_right">
+
+    </div>
+  </header>
+  <nav class="App__nav">
+    <ul>
+      <li><router-link to="/">Home</router-link></li>
+    </ul>
+  </nav>
+  <router-view />
+  <footer>
+    &copy; Awesome Company
+  </footer>
+</template>

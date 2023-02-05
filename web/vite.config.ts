@@ -1,16 +1,30 @@
 import { defineConfig } from 'vite'
+import { fileURLToPath, URL } from 'url'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from "vite-plugin-pwa"
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  server:{
-    port:7070,
-    proxy:{
+  server: {
+    port: 7070,
+    host: "0.0.0.0",
+    proxy: {
       '/api': 'http://localhost:8080',
+      '/logfiles': 'http://localhost:8080',
     }
   },
-  plugins: [vue(),    VitePWA({
+  build: {
+    minify: 'terser',
+    terserOptions: {
+      toplevel: true,
+    },
+  },
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    }
+  },
+  plugins: [vue(), VitePWA({
     mode: "development",
     base: "/",
     srcDir: "src",

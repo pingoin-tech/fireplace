@@ -1,0 +1,286 @@
+/** @format */
+
+:root {
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+*,
+::before,
+::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "DaxWebPro", "GudeaBold", "Trebuchet MS", "VL Gothic", Trebuchet,
+    Arial, Verdana, Geneva, Helvetica, sans-serif;
+  max-width: 75rem;
+  min-width: 50rem;
+
+  margin: auto;
+}
+
+header,
+nav,
+article,
+footer {
+  background-color: #515151;
+  display: block;
+}
+
+@media screen {
+  nav,
+  footer,
+  article,
+  table,
+  figure,
+  .info,
+  .safety {
+    border: 1px solid rgb(221, 221, 221);
+    border-radius: 0.25rem;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+    padding: 0.25rem;
+    width: auto;
+  }
+}
+
+@media print {
+  table,
+  figure,
+  .info,
+  .safety {
+    border: 1px solid rgb(221, 221, 221);
+    border-radius: 0.25rem;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+    padding: 0.25rem;
+    width: auto;
+  }
+}
+
+header {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  height: 4rem;
+}
+
+nav {
+  position: sticky;
+  position: -webkit-sticky;
+  width: 20%;
+  float: left;
+  top: 0.5rem;
+  margin-top: 0.5rem;
+  margin-left: 0.5rem;
+  margin-bottom: 2.75rem;
+  overflow: auto;
+  max-height: calc(100vh - 2.5rem);
+
+  ul {
+    list-style-type: none;
+    margin-left: 0.5rem;
+    padding: 0;
+
+    li a {
+      display: block;
+      color: #ffffff;
+      padding: 0.25rem 0.5rem;
+      text-decoration: none;
+      font-size: 75%;
+    }
+
+    li a:hover {
+      background-color: #94b1c1;
+      color: white;
+      border-radius: 0.25rem;
+    }
+  }
+
+  @media print {
+    display: none;
+  }
+}
+
+.fill-width {
+  width: 100%;
+}
+
+main {
+  display: block;
+  margin: 1rem 0 0 calc(20% + 0.5rem);
+
+  @media print {
+    margin: 0.5rem;
+  }
+}
+
+footer {
+  text-align: center;
+  padding: 0.5rem;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2.25rem;
+  margin: 0.5rem;
+  margin-left: calc(20% + 1rem);
+}
+
+article {
+  margin: 0.5rem;
+  margin-bottom: 0.25rem;
+  padding: 1.25rem;
+}
+
+#header_left {
+  width: 33%;
+  height: 4rem;
+  float: left;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+#header_middle {
+  display: inline-block;
+  width: 33%;
+  float: none;
+  height: 4rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+#header_right {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  width: 33%;
+  float: right;
+  margin: auto;
+  height: 4rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+figure {
+  display: block;
+  page-break-inside: avoid;
+  padding: 0.5rem;
+  margin: 0.25rem;
+  max-width: 33rem;
+  width: calc(100% - 1rem);
+
+  img {
+    display: block;
+    page-break-inside: avoid;
+    border-radius: 0.25rem;
+    margin-bottom: 0.5rem;
+    width: calc(100% - 1rem);
+  }
+}
+
+figcaption {
+  border-top: 1px solid rgb(221, 221, 221);
+  padding-top: 0.24rem;
+  text-align: center;
+}
+
+tbody {
+  td,
+  th {
+    border-top: 1px solid rgb(221, 221, 221);
+  }
+}
+
+table {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  margin: 0.25rem;
+}
+
+.proControl {
+  color: #005a8b;
+  font-family: inherit;
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.slaveStatus {
+  width: 25em;
+}
+
+.statusTable {
+  width: 95%;
+}
+
+.homeLights {
+  width: 20em;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: inherit;
+  font-weight: 500;
+  line-height: 1.1;
+  color: inherit;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  border-top: 1px solid rgb(221, 221, 221);
+  padding-top: 0.5rem;
+}
+
+hr {
+  width: 95%;
+  border: none;
+  border-top: 1px solid rgb(221, 221, 221);
+  height: 0;
+}
+
+.list {
+  float: left;
+}
+
+.clearfix::after {
+  content: " ";
+  display: block;
+  height: 0;
+  clear: both;
+}
+
+.figsmall {
+  max-width: 17rem;
+}
+
+.text-right {
+  float: right;
+  vertical-align: bottom;
+  margin: 0;
+  text-align: right;
+  color: #005a8b;
+}
+
+.proControlList {
+  width: 25em;
+  .statusTable {
+    background-color: #cccccc;
+  }
+}

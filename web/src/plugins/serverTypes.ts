@@ -1,3 +1,1 @@
-export interface Device{
-
-}
+export * from "../../../bindings/Device";

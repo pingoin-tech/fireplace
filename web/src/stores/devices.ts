@@ -1,20 +1,14 @@
 import axios from "axios"
 import { defineStore } from "pinia"
 import { computed, ref } from "vue"
-import {Device} from "../../../bindings/Device"
+import { Device } from "../plugins/serverTypes"
 
 export const useDeviceStore = defineStore('device', () => {
-    const count = ref(0)
-    const name = ref('Eduardo')
-    const doubleCount = computed(() => count.value * 2)
-    function increment() {
-      count.value++
-    }
-    let devices=ref({}as Device)
-    
-    async function refresh(){
-      devices.value=await (await axios.get<Device>("/api/devices/")).data;
-    }
+  let devices = ref({} as Array<Device>)
 
-    return { count, devices, doubleCount, increment, refresh }
-  })
+  async function refresh() {
+    devices.value = await (await axios.get<Array<Device>>("/api/devices/")).data;
+  }
+
+  return { devices, refresh }
+})
