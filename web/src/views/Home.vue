@@ -4,7 +4,6 @@ import { useDeviceStore } from "../stores/devices";
 import { storeToRefs } from 'pinia';
 import DeviceView from '../components/DeviceView.vue';
 
-defineProps<{ msg: string }>()
 const store = useDeviceStore()
 const { devices } = storeToRefs(store);
 const { refresh } = store;
@@ -17,13 +16,21 @@ onMounted(async () => {
 
 <template>
   <main>
-    <h1>{{ msg }}</h1>
-    <DeviceView v-for="device in devices" :dev="device" />
+    <article>
+    <h1>Devices</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>id</th>
+          <th>ip</th>
+          <th>sub-device</th>
+          <th>actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <DeviceView v-for="device in devices" :dev="device" />
+      </tbody>
+    </table>
+  </article>
   </main>
 </template>
-
-<style scoped>
-.read-the-docs {
-  color: #888;
-}
-</style>
