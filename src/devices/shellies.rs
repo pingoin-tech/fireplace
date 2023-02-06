@@ -1,5 +1,5 @@
 use self::{
-    decodings::{decode_other, decode_relay, decode_voltage},
+    decodings::{decode_other, decode_relay, decode_voltage, decode_light},
     incoming_data::{
         InputStat, LightStat, MeterStat, RelaysState, RollerStat, UpdateStat,
     },
@@ -42,6 +42,11 @@ pub struct Shelly {
     pub uptime: u32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub voltage: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub power: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub energy: Option<f32>,
+    
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, TS)]
@@ -66,6 +71,12 @@ impl Shelly {
             Some("update") => {
                 ActionType::MqttAction(format!("{}command", base_path), String::from("update"))
             }
+            Some("on") =>{
+                ActionType::MqttAction(format!("{}light/0/command", base_path), String::from("on"))
+            }
+            Some("off") =>{
+                ActionType::MqttAction(format!("{}light/0/command", base_path), String::from("off"))
+            }
             _ => ActionType::NotAvailable,
         }
     }
@@ -73,7 +84,7 @@ impl Shelly {
     fn from_announce(data: ShellyAnnounce) -> (Shelly, Vec<String>, Vec<String>) {
         let mut shelly_type = ShellyType::Shelly1;
 
-        let actions = vec!["announce".to_string(),"update".to_string()];
+        let mut actions = vec!["announce".to_string(),"update".to_string()];
         let events = vec!["new_data".to_string()];
         match data.model.as_str() {
             "SHSW-25" => {
@@ -88,6 +99,8 @@ impl Shelly {
             }
             "SHDM-2" => {
                 shelly_type = ShellyType::ShellyDimmer;
+                actions.push("on".to_string());
+                actions.push("off".to_string());
             }
             _ => {}
         }
@@ -106,6 +119,8 @@ impl Shelly {
                 overtemperature: None,
                 overpower: None,
                 voltage: None,
+                power:None,
+                energy:None,
             },
             actions,
             events,
@@ -126,6 +141,7 @@ pub fn decode_shelly_sub(content: &Publish, mut path: Split<&str>) {
             Some("command") => {}
             Some("online") => {}
             Some("relay") => decode_relay(content, String::from(id), path),
+            Some("light")=> decode_light(content, String::from(id), path),
             Some("info") => decode_info(content, String::from(id)),
             Some("voltage") => decode_voltage(content, String::from(id)),
             Some(path) => decode_other(path, String::from(id), content),

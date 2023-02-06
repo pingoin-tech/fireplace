@@ -69,7 +69,7 @@ pub struct UpdateStat {
 #[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]
 #[ts(export)]
 pub struct LightStat {
-    ison: bool,
+    pub ison: bool,
     source: String,
     has_timer: bool,
     timer_started: u32,
