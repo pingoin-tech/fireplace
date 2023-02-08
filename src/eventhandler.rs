@@ -1,7 +1,9 @@
 use std::sync::Mutex;
 
 use rumqttc::{AsyncClient, QoS};
+use serde::{Deserialize, Serialize};
 use tokio::time::{sleep, Duration};
+use ts_rs::TS;
 
 use crate::devices;
 
@@ -13,6 +15,26 @@ pub struct Handler {
     client: AsyncClient,
     event_buffer: Vec<String>,
     action_buffer: Vec<ActionType>,
+}
+
+#[derive(Serialize, Deserialize, Debug, TS)]
+#[serde(tag = "type", content = "val", rename_all = "snake_case")]
+#[ts(export)]
+pub enum Value {
+    Number(f32),
+    Bool(bool),
+    String(String),
+}
+
+#[derive(Serialize, Deserialize, Debug, TS)]
+#[ts(export)]
+pub struct EventType {
+    pub id: String,
+    pub action: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub value: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub subdevice: Option<String>,
 }
 
 impl Handler {
@@ -31,25 +53,25 @@ impl Handler {
             .await
             .unwrap();
         sleep(Duration::from_millis(1000)).await;
-        self.force_action(String::from("schlafenEltern-lichtSchalter/announce"));
+        self.force_action(EventType {
+            id: "schlafenEltern-lichtSchalter".to_string(),
+            action: "announce".to_string(),
+            value: None,
+            subdevice: None,
+        });
     }
 
     pub fn trigger_event(&mut self, event_string: String) {
         self.event_buffer.push(event_string);
     }
 
-    pub fn force_action(&mut self, action_string: String) -> bool {
-        let (first, path) = split_action_string(action_string);
-        let action = if let Some(id) = first {
-            devices::get_device_from_list(
-                id,
-                |device| device.trigger_action(path),
-                |_| ActionType::NotAvailable,
-                ActionType::NotAvailable,
-            )
-        } else {
-            ActionType::NotAvailable
-        };
+    pub fn force_action(&mut self, action_triggered: EventType) -> bool {
+        let action = devices::get_device_from_list(
+            action_triggered.id.clone(),
+            |device| device.trigger_action(action_triggered),
+            |_| ActionType::NotAvailable,
+            ActionType::NotAvailable,
+        );
 
         self.action_buffer.push(action.clone());
 

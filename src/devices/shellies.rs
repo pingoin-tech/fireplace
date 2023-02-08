@@ -1,17 +1,10 @@
 use self::{
-    decodings::{decode_other, decode_relay, decode_voltage, decode_light},
-    incoming_data::{
-        InputStat, LightStat, MeterStat, RelaysState, RollerStat, UpdateStat,
-    },
+    decodings::{decode_light, decode_other, decode_relay, decode_voltage},
+    incoming_data::{InputStat, LightStat, MeterStat, RelaysState, RollerStat, UpdateStat},
 };
-use crate::{
-    devices::{Device, DeviceType},
-    eventhandler::ActionType,
-};
+use crate::eventhandler::{ActionType, EventType};
 use ts_rs::TS;
 
-use super::get_device_from_list;
-use chrono::Utc;
 use rumqttc::Publish;
 use serde::{Deserialize, Serialize};
 use std::str::Split;
@@ -46,7 +39,6 @@ pub struct Shelly {
     pub power: Option<f32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub energy: Option<f32>,
-    
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, TS)]
@@ -59,22 +51,21 @@ pub enum ShellyType {
 }
 
 impl Shelly {
-    pub fn trigger_action(&mut self, action_path: String, id: String) -> ActionType {
-        let base_path = format!("shellies/{}/", id);
-        println!("{}",action_path.clone());
-        let mut splitted = action_path.split("/");
+    pub fn trigger_action(&mut self, action: EventType) -> ActionType {
+        let base_path = format!("shellies/{}/", action.id);
+        println!("{}", action.action.clone());
 
-        match splitted.next() {
-            Some("announce") => {
+        match action.action.as_str() {
+            "announce" => {
                 ActionType::MqttAction(format!("{}command", base_path), String::from("announce"))
             }
-            Some("update") => {
+            "update" => {
                 ActionType::MqttAction(format!("{}command", base_path), String::from("update"))
             }
-            Some("on") =>{
+            "on" => {
                 ActionType::MqttAction(format!("{}light/0/command", base_path), String::from("on"))
             }
-            Some("off") =>{
+            "off" => {
                 ActionType::MqttAction(format!("{}light/0/command", base_path), String::from("off"))
             }
             _ => ActionType::NotAvailable,
@@ -84,7 +75,7 @@ impl Shelly {
     fn from_announce(data: ShellyAnnounce) -> (Shelly, Vec<String>, Vec<String>) {
         let mut shelly_type = ShellyType::Shelly1;
 
-        let mut actions = vec!["announce".to_string(),"update".to_string()];
+        let mut actions = vec!["announce".to_string(), "update".to_string()];
         let events = vec!["new_data".to_string()];
         match data.model.as_str() {
             "SHSW-25" => {
@@ -119,8 +110,8 @@ impl Shelly {
                 overtemperature: None,
                 overpower: None,
                 voltage: None,
-                power:None,
-                energy:None,
+                power: None,
+                energy: None,
             },
             actions,
             events,
@@ -141,7 +132,7 @@ pub fn decode_shelly_sub(content: &Publish, mut path: Split<&str>) {
             Some("command") => {}
             Some("online") => {}
             Some("relay") => decode_relay(content, String::from(id), path),
-            Some("light")=> decode_light(content, String::from(id), path),
+            Some("light") => decode_light(content, String::from(id), path),
             Some("info") => decode_info(content, String::from(id)),
             Some("voltage") => decode_voltage(content, String::from(id)),
             Some(path) => decode_other(path, String::from(id), content),
@@ -149,24 +140,4 @@ pub fn decode_shelly_sub(content: &Publish, mut path: Split<&str>) {
         },
         _ => {}
     }
-}
-
-pub fn open_shelly_fom_list<Fs, Ff>(id: String, found: Fs, not_found: Ff)
-where
-    Fs: FnOnce(&mut Shelly),
-    Ff: FnOnce(&mut Vec<Device>),
-{
-    get_device_from_list(
-        id,
-        |device| {
-            device.last_message = Utc::now();
-            let sub_dev = &mut device.subdevice;
-            match sub_dev {
-                DeviceType::Shelly(shel) => found(shel),
-                _ => {}
-            }
-        },
-        not_found,
-        (),
-    );
 }

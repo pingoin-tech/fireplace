@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Device, Shelly } from "../plugins/serverTypes";
+import { Device, Shelly, EventType } from "../plugins/serverTypes";
 import axios from "axios"
 
 const props = defineProps<{
@@ -13,7 +13,11 @@ if (props.dev.subdevice.type == "shelly") {
 }
 
 let action = (action: string) => {
-  let data = { action_string: `${props.dev.id}/${action}` };
+  let data: EventType = {
+    id: props.dev.id,
+    action: action
+  }
+
   axios.post("/api/trigger-action/", data);
 }
 
@@ -30,14 +34,9 @@ let action = (action: string) => {
         <li>
           typ: {{ dev.subdevice.type }}<span v-if="shelly">/{{ shelly.shelly_type }}</span>
         </li>
-        <template v-if="shelly">
-          <li v-if="shelly.rollers">
-            Rollo: {{ shelly.rollers[0].current_pos }}
-          </li>
-          <li v-if="shelly.lights">
-            licht {{ shelly.lights[0].ison }} <span v-if="shelly.lights[0].brightness">({{
-              shelly.lights[0].brightness
-            }})</span>
+        <template v-for="devValue, index in dev.values">
+          <li v-if="devValue.type == 'string'">
+            {{ index }}: {{ devValue.val }}
           </li>
         </template>
 

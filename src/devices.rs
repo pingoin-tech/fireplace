@@ -4,9 +4,9 @@ pub mod shellies;
 use shellies::Shelly;
 use ts_rs::TS;
 
-use std::sync::Mutex;
+use std::{collections::HashMap, sync::Mutex};
 
-use crate::eventhandler::ActionType;
+use crate::eventhandler::{ActionType, EventType, Value};
 
 type DeviceDataBase = Mutex<Option<Vec<Device>>>;
 
@@ -20,6 +20,7 @@ pub struct Device {
     pub rssi: i16,
     pub available_actions: Vec<String>,
     pub available_events: Vec<String>,
+    pub values: HashMap<String, Value>,
 }
 
 #[derive(Serialize, Deserialize, Debug, TS)]
@@ -52,9 +53,9 @@ where
 }
 
 impl Device {
-    pub fn trigger_action(&mut self, action_path: String) -> ActionType {
+    pub fn trigger_action(&mut self, action: EventType) -> ActionType {
         match &mut self.subdevice {
-            DeviceType::Shelly(device) => device.trigger_action(action_path, self.id.clone()),
+            DeviceType::Shelly(device) => device.trigger_action(action),
             DeviceType::Empty => ActionType::NotAvailable,
         }
     }

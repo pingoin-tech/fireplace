@@ -1,4 +1,4 @@
-use std::{str, str::Split};
+use std::{collections::HashMap, str, str::Split};
 
 use chrono::Utc;
 use rumqttc::Publish;
@@ -7,7 +7,7 @@ use std::str::FromStr;
 
 use crate::{
     devices::{get_device_from_list, Device, DeviceType},
-    eventhandler::get_event_handler,
+    eventhandler::{get_event_handler, Value},
 };
 
 use super::{
@@ -36,6 +36,7 @@ pub fn decode_announce(content: &Publish) {
                     available_actions: actions,
                     available_events: events,
                     rssi: 0,
+                    values: HashMap::new(),
                 });
             },
             (),
@@ -90,52 +91,37 @@ pub fn decode_other(path: &str, id: String, content: &Publish) {
 pub fn decode_voltage(content: &Publish, id: String) {
     if let Ok(string) = str::from_utf8(&content.payload) {
         if let Ok(val) = f32::from_str(string) {
-            super::open_shelly_fom_list(
+            get_device_from_list(
                 id,
                 |shelly| {
-                    shelly.voltage = Some(val);
+                    shelly
+                        .values
+                        .insert("voltage".to_string(), Value::Number(val));
                 },
                 |_| {},
+                (),
             )
         }
     }
 }
 
 pub fn decode_relay(content: &Publish, id: String, mut path: Split<&str>) {
-    let index_op: Option<usize> = match path.next() {
-        None => None,
-        Some("0") => Some(0),
-        Some("1") => Some(1),
-        _ => None,
+    if let Some(index) = path.next() {
+        let payload_result = str::from_utf8(&content.payload);
+        if let Ok(status) = payload_result {
+            get_device_from_list(
+                id.clone(),
+                |shelly| {
+                    shelly.values.insert(
+                        format!("relay/{}", index),
+                        Value::String(status.to_string()),
+                    );
+                },
+                |_| {},
+                (),
+            );
+        };
     };
-    if let Some(index) = index_op {
-        let lower = str::from_utf8(&content.payload);
-        super::open_shelly_fom_list(
-            id.clone(),
-            |shelly| {
-                if let Some(relay_arr) = &mut shelly.relays {
-                    if let Some(relay) = relay_arr.get_mut(index) {
-                        match lower {
-                            Ok("on") => {
-                                relay.ison = true;
-                                relay.overpower = Some(false);
-                            }
-                            Ok("off") => {
-                                relay.ison = false;
-                                relay.overpower = Some(false);
-                            }
-                            Ok("overpower") => {
-                                relay.ison = false;
-                                relay.overpower = Some(true);
-                            }
-                            _ => {}
-                        };
-                    }
-                }
-            },
-            |_| {},
-        );
-    }
     trigger_new_data(id)
 }
 
@@ -154,55 +140,55 @@ pub fn decode_light(content: &Publish, id: String, mut path: Split<&str>) {
         _ => None,
     };
     match path.next() {
-        Some("power")=>{
+        Some("power") => {
             if let Ok(string) = str::from_utf8(&content.payload) {
                 if let Ok(val) = f32::from_str(string) {
-                    super::open_shelly_fom_list(
+                    get_device_from_list(
                         id.clone(),
                         |shelly| {
-                            shelly.power = Some(val);
+                            shelly
+                                .values
+                                .insert("power".to_string(), Value::Number(val));
                         },
                         |_| {},
+                        (),
                     )
                 }
             }
-        },
-        Some("energy")=>{
+        }
+        Some("energy") => {
             if let Ok(string) = str::from_utf8(&content.payload) {
                 if let Ok(val) = f32::from_str(string) {
-                    super::open_shelly_fom_list(
+                    get_device_from_list(
                         id.clone(),
                         |shelly| {
-                            shelly.energy= Some(val);
+                            shelly
+                                .values
+                                .insert("power".to_string(), Value::Number(val));
                         },
                         |_| {},
+                        (),
                     )
                 }
             }
-        },
-        Some(_) => {},
+        }
+        Some(_) => {}
         None => {
             if let Some(index) = index_op {
-                let lower = str::from_utf8(&content.payload);
-                super::open_shelly_fom_list(
-                    id.clone(),
-                    |shelly| {
-                        if let Some(light_vec) = &mut shelly.lights {
-                            if let Some(light) = light_vec.get_mut(index) {
-                                match lower {
-                                    Ok("on") => {
-                                        light.ison = true;
-                                    }
-                                    Ok("off") => {
-                                        light.ison = false;
-                                    }
-                                    _ => {}
-                                };
-                            }
-                        }
-                    },
-                    |_| {},
-                );
+                let payload_result = str::from_utf8(&content.payload);
+                if let Ok(status) = payload_result {
+                    get_device_from_list(
+                        id.clone(),
+                        |shelly| {
+                            shelly.values.insert(
+                                format!("light/{}", index),
+                                Value::String(status.to_string()),
+                            );
+                        },
+                        |_| {},
+                        (),
+                    );
+                };
             }
         }
     }
