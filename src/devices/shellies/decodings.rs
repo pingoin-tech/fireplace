@@ -1,7 +1,6 @@
-use std::{collections::HashMap, str, str::Split};
+use std::collections::HashMap;
 
 use chrono::Utc;
-use rumqttc::Publish;
 use serde_json::Error;
 use std::str::FromStr;
 
@@ -12,11 +11,11 @@ use crate::{
 
 use super::{
     incoming_data::{ShellyAnnounce, ShellyInfo},
-    Shelly,
+    Shelly, Telegram,
 };
 
-pub fn decode_announce(content: &Publish) {
-    let dev_res: Result<ShellyAnnounce, Error> = serde_json::from_slice(&content.payload);
+pub fn decode_announce(content: Telegram) {
+    let dev_res: Result<ShellyAnnounce, Error> = serde_json::from_str(&content.payload.as_str());
     match dev_res {
         Ok(device) => get_device_from_list(
             device.id.clone(),
@@ -45,12 +44,12 @@ pub fn decode_announce(content: &Publish) {
     }
 }
 
-pub fn decode_info(content: &Publish, id: String) {
-    let dev_res: Result<ShellyInfo, Error> = serde_json::from_slice(&content.payload);
+pub fn decode_info(telegram: Telegram) {
+    let dev_res: Result<ShellyInfo, Error> = serde_json::from_str(&telegram.payload.as_str());
     match dev_res {
         Ok(info_data) => {
             get_device_from_list(
-                id.clone(),
+                telegram.id.clone(),
                 |device| {
                     device.rssi = info_data.wifi_sta.rssi;
                     match &mut device.subdevice {
@@ -76,53 +75,61 @@ pub fn decode_info(content: &Publish, id: String) {
     }
 }
 
-pub fn decode_other(path: &str, id: String, content: &Publish) {
+pub fn decode_other(telegram: Telegram) {
     get_device_from_list(
-        id.clone(),
+        telegram.id.clone(),
         |dev| {
             dev.last_message = Utc::now();
-            println!("State input: {}/{}: {:?}", dev.id, path, content.payload);
+            println!(
+                "State input: {}/{}: {:?}",
+                dev.id, telegram.topic, telegram.payload
+            );
         },
-        |_| println!("Unknown device: {}/{}: {:?}", id, path, content.payload),
+        |_| {
+            println!(
+                "Unknown device: {}/{}: {:?}",
+                telegram.id, telegram.topic, telegram.payload
+            )
+        },
         (),
     );
 }
 
-pub fn decode_voltage(content: &Publish, id: String) {
-    if let Ok(string) = str::from_utf8(&content.payload) {
-        if let Ok(val) = f32::from_str(string) {
-            get_device_from_list(
-                id,
-                |shelly| {
-                    shelly
-                        .values
-                        .insert("voltage".to_string(), Value::Number(val));
-                },
-                |_| {},
-                (),
-            )
-        }
+pub fn decode_voltage(telegram: Telegram) {
+    if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
+        get_device_from_list(
+            telegram.id,
+            |shelly| {
+                shelly
+                    .values
+                    .insert("voltage".to_string(), Value::Number(val));
+            },
+            |_| {},
+            (),
+        )
     }
 }
 
-pub fn decode_relay(content: &Publish, id: String, mut path: Split<&str>) {
-    if let Some(index) = path.next() {
-        let payload_result = str::from_utf8(&content.payload);
-        if let Ok(status) = payload_result {
+pub fn decode_relay(telegram: Telegram) {
+    if let Some(index) = telegram.subdevice_number {
+        if telegram.subdevice == None {
+            let mut on = false;
+            if telegram.payload.as_str() == "on" {
+                on = true;
+            }
             get_device_from_list(
-                id.clone(),
+                telegram.id.clone(),
                 |shelly| {
-                    shelly.values.insert(
-                        format!("relay/{}", index),
-                        Value::String(status.to_string()),
-                    );
+                    shelly
+                        .values
+                        .insert(format!("relay/{}/on", index), Value::Bool(on));
                 },
                 |_| {},
                 (),
             );
-        };
-    };
-    trigger_new_data(id)
+        }
+    }
+    trigger_new_data(telegram.id)
 }
 
 fn trigger_new_data(id: String) {
@@ -132,65 +139,56 @@ fn trigger_new_data(id: String) {
     )
 }
 
-pub fn decode_light(content: &Publish, id: String, mut path: Split<&str>) {
-    let index_op: Option<usize> = match path.next() {
-        None => None,
-        Some("0") => Some(0),
-        Some("1") => Some(1),
-        _ => None,
-    };
-    match path.next() {
+pub fn decode_light(telegram: Telegram) {
+    let index_op: Option<usize> = telegram.subdevice_number;
+    match telegram.subdevice.as_deref() {
         Some("power") => {
-            if let Ok(string) = str::from_utf8(&content.payload) {
-                if let Ok(val) = f32::from_str(string) {
-                    get_device_from_list(
-                        id.clone(),
-                        |shelly| {
-                            shelly
-                                .values
-                                .insert("power".to_string(), Value::Number(val));
-                        },
-                        |_| {},
-                        (),
-                    )
-                }
+            if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
+                get_device_from_list(
+                    telegram.id.clone(),
+                    |shelly| {
+                        shelly
+                            .values
+                            .insert("power".to_string(), Value::Number(val));
+                    },
+                    |_| {},
+                    (),
+                )
             }
         }
         Some("energy") => {
-            if let Ok(string) = str::from_utf8(&content.payload) {
-                if let Ok(val) = f32::from_str(string) {
-                    get_device_from_list(
-                        id.clone(),
-                        |shelly| {
-                            shelly
-                                .values
-                                .insert("power".to_string(), Value::Number(val));
-                        },
-                        |_| {},
-                        (),
-                    )
-                }
+            if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
+                get_device_from_list(
+                    telegram.id.clone(),
+                    |shelly| {
+                        shelly
+                            .values
+                            .insert("power".to_string(), Value::Number(val));
+                    },
+                    |_| {},
+                    (),
+                )
             }
         }
         Some(_) => {}
         None => {
             if let Some(index) = index_op {
-                let payload_result = str::from_utf8(&content.payload);
-                if let Ok(status) = payload_result {
-                    get_device_from_list(
-                        id.clone(),
-                        |shelly| {
-                            shelly.values.insert(
-                                format!("light/{}", index),
-                                Value::String(status.to_string()),
-                            );
-                        },
-                        |_| {},
-                        (),
-                    );
-                };
+                let mut on = false;
+                if telegram.payload.as_str() == "on" {
+                    on = true;
+                }
+                get_device_from_list(
+                    telegram.id.clone(),
+                    |shelly| {
+                        shelly
+                            .values
+                            .insert(format!("light/{}/on", index), Value::Bool(on));
+                    },
+                    |_| {},
+                    (),
+                );
             }
         }
     }
-    trigger_new_data(id)
+    trigger_new_data(telegram.id)
 }

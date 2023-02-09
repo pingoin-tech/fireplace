@@ -3,11 +3,11 @@ use self::{
     incoming_data::{InputStat, LightStat, MeterStat, RelaysState, RollerStat, UpdateStat},
 };
 use crate::eventhandler::{ActionType, EventType};
+use std::str::FromStr;
 use ts_rs::TS;
 
 use rumqttc::Publish;
 use serde::{Deserialize, Serialize};
-use std::str::Split;
 
 mod decodings;
 mod incoming_data;
@@ -48,6 +48,16 @@ pub enum ShellyType {
     ShellyDimmer,
     Shelly25Roller,
     Shelly25Switch,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, TS)]
+#[ts(export)]
+pub struct Telegram {
+    pub id: String,
+    pub subdevice: Option<String>,
+    pub subdevice_number: Option<usize>,
+    pub topic: String,
+    pub payload: String,
 }
 
 impl Shelly {
@@ -119,25 +129,66 @@ impl Shelly {
     }
 }
 
-pub fn decode_shelly_sub(content: &Publish, mut path: Split<&str>) {
-    match path.next() {
-        Some("announce") => {
-            decode_announce(content);
-        }
-        Some("command") => {}
-        Some(id) => match path.next() {
-            Some("announce") => {
-                decode_announce(content);
-            }
-            Some("command") => {}
-            Some("online") => {}
-            Some("relay") => decode_relay(content, String::from(id), path),
-            Some("light") => decode_light(content, String::from(id), path),
-            Some("info") => decode_info(content, String::from(id)),
-            Some("voltage") => decode_voltage(content, String::from(id)),
-            Some(path) => decode_other(path, String::from(id), content),
-            None => {}
+pub fn decode_shelly_sub(content: &Publish) {
+    let topic = content.topic.split("/");
+
+    let mut topic_list = Vec::new();
+    topic.for_each(|val| topic_list.push(val.to_string()));
+    let payload = String::from_utf8((&content.payload).to_vec()).unwrap();
+    let tel = match topic_list.len() {
+        3 => Telegram {
+            id: topic_list[1].clone(),
+            subdevice: None,
+            subdevice_number: None,
+            topic: topic_list[2].clone(),
+            payload: payload,
         },
-        _ => {}
+        4 => {
+            let index = usize::from_str(topic_list[3].clone().as_str());
+            if let Ok(index) = index {
+                Telegram {
+                    id: topic_list[1].clone(),
+                    subdevice: None,
+                    subdevice_number: Some(index),
+                    topic: topic_list[2].clone(),
+                    payload: payload,
+                }
+            } else {
+                Telegram {
+                    id: topic_list[1].clone(),
+                    subdevice: Some(topic_list[2].clone()),
+                    subdevice_number: None,
+                    topic: topic_list[3].clone(),
+                    payload: payload,
+                }
+            }
+        }
+        5 => Telegram {
+            id: topic_list[1].clone(),
+            subdevice: Some(topic_list[2].clone()),
+            subdevice_number: Some(0),
+            topic: topic_list[4].clone(),
+            payload: payload,
+        },
+        _ => Telegram {
+            id: "".to_string(),
+            subdevice: None,
+            subdevice_number: None,
+            topic: topic_list[1].clone(),
+            payload: payload,
+        },
+    };
+
+    match tel.topic.as_str() {
+        "announce" => decode_announce(tel),
+        "command" => {}
+        "online" => {}
+        "relay" => decode_relay(tel),
+        "light" => decode_light(tel),
+        "info" => decode_info(tel),
+        "voltage" => decode_voltage(tel),
+        _ => {
+            decode_other(tel);
+        }
     }
 }

@@ -39,7 +39,7 @@ pub async fn decode_subsciptions(content:Publish){
     let mut path=content.topic.split("/");
     match path.next() {
         Some("shellies")=>{
-            decode_shelly_sub(&content, path);
+            decode_shelly_sub(&content);
         },
         _=>{},
     }

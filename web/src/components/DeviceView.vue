@@ -38,6 +38,12 @@ let action = (action: string) => {
           <li v-if="devValue.type == 'string'">
             {{ index }}: {{ devValue.val }}
           </li>
+          <li v-if="devValue.type == 'number'">
+            {{ index }}: {{ devValue.val }}
+          </li>
+          <li v-if="devValue.type == 'bool'">
+            {{ index }}: {{ devValue.val }}
+          </li>
         </template>
 
       </ul>
