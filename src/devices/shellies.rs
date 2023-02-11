@@ -1,5 +1,5 @@
 use self::{
-    decodings::{decode_other, decode_subdevice, decode_voltage},
+    decodings::{decode_other, decode_subdevice, decode_value},
     incoming_data::{InputStat, LightStat, MeterStat, RelaysState, RollerStat, UpdateStat},
 };
 use crate::eventhandler::{ActionType, EventType};
@@ -139,20 +139,33 @@ pub fn decode_shelly_sub(content: &Publish) {
             } else {
                 Telegram {
                     id: topic_list[1].clone(),
-                    subdevice: Some(topic_list[2].clone()),
+                    subdevice: Some(topic_list[3].clone()),
                     subdevice_number: None,
-                    topic: topic_list[3].clone(),
+                    topic: topic_list[2].clone(),
                     payload: payload,
                 }
             }
         }
-        5 => Telegram {
-            id: topic_list[1].clone(),
-            subdevice: Some(topic_list[2].clone()),
-            subdevice_number: Some(0),
-            topic: topic_list[4].clone(),
-            payload: payload,
-        },
+        5 => {
+            let index = usize::from_str(topic_list[3].clone().as_str());
+            if let Ok(index) = index {
+                Telegram {
+                    id: topic_list[1].clone(),
+                    subdevice: Some(topic_list[4].clone()),
+                    subdevice_number: Some(index),
+                    topic: topic_list[2].clone(),
+                    payload: payload,
+                }
+            } else {
+                Telegram {
+                    id: topic_list[1].clone(),
+                    subdevice: Some(topic_list[3].clone()),
+                    subdevice_number: None,
+                    topic: topic_list[2].clone(),
+                    payload: payload,
+                }
+            }
+        }
         _ => Telegram {
             id: "".to_string(),
             subdevice: None,
@@ -166,10 +179,16 @@ pub fn decode_shelly_sub(content: &Publish) {
         "announce" => decode_announce(tel),
         "command" => {}
         "online" => {}
+        "temperature_f" => {}
+        "overtemperature" => {}
+        "overpower" => {}
+        "loaderror" => {}
+        "temperature_status" => {}
         "relay" => decode_subdevice(tel, "relay"),
         "light" => decode_subdevice(tel, "light"),
         "info" => decode_info(tel),
-        "voltage" => decode_voltage(tel),
+        "voltage" => decode_value(tel, "voltage"),
+        "temperature" => decode_value(tel, "temperature"),
         _ => {
             decode_other(tel);
         }

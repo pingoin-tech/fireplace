@@ -92,8 +92,8 @@ pub fn decode_other(telegram: Telegram) {
         |dev| {
             dev.last_message = Utc::now();
             println!(
-                "State input: {}/{}: {:?}",
-                dev.id, telegram.topic, telegram.payload
+                "State input: {}/{:?}/{:?}/{}: {:?}",
+                dev.id,telegram.subdevice,telegram.subdevice_number, telegram.topic, telegram.payload
             );
         },
         |_| {
@@ -106,14 +106,14 @@ pub fn decode_other(telegram: Telegram) {
     );
 }
 
-pub fn decode_voltage(telegram: Telegram) {
+pub fn decode_value(telegram: Telegram,value:&str) {
     if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
         get_device_from_list(
             telegram.id,
             |shelly| {
                 shelly
                     .values
-                    .insert("voltage".to_string(), Value::Number(val));
+                    .insert(value.to_string(), Value::Number(val));
             },
             |_| {},
             (),
