@@ -1,6 +1,8 @@
 use self::{
-    decodings::{decode_other, decode_subdevice, decode_value},
-    incoming_data::{InputStat, LightStat, MeterStat, RelaysState, RollerStat, UpdateStat},
+    decodings::{
+        decode_announce, decode_info, decode_other, decode_roller, decode_subdevice, decode_value,
+    },
+    incoming_data::{InputStat, MeterStat, RollerStat, UpdateStat},
 };
 use crate::eventhandler::{ActionType, EventType};
 use std::str::FromStr;
@@ -11,7 +13,6 @@ use serde::{Deserialize, Serialize};
 
 mod decodings;
 mod incoming_data;
-use decodings::{decode_announce, decode_info};
 use incoming_data::ShellyAnnounce;
 
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
@@ -19,10 +20,6 @@ use incoming_data::ShellyAnnounce;
 pub struct Shelly {
     pub fw_ver: String,
     pub shelly_type: ShellyType,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub relays: Option<Vec<RelaysState>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub lights: Option<Vec<LightStat>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rollers: Option<Vec<RollerStat>>,
     pub update: UpdateStat,
@@ -99,11 +96,9 @@ impl Shelly {
             Shelly {
                 fw_ver: data.fw_ver,
                 shelly_type: shelly_type,
-                relays: None,
                 update: UpdateStat::default(),
                 meters: Vec::new(),
                 inputs: Vec::new(),
-                lights: None,
                 rollers: None,
             },
             actions,
@@ -184,8 +179,10 @@ pub fn decode_shelly_sub(content: &Publish) {
         "overpower" => {}
         "loaderror" => {}
         "temperature_status" => {}
+        "roller" => decode_roller(tel),
         "relay" => decode_subdevice(tel, "relay"),
         "light" => decode_subdevice(tel, "light"),
+        "input" => decode_subdevice(tel, "input"),
         "info" => decode_info(tel),
         "voltage" => decode_value(tel, "voltage"),
         "temperature" => decode_value(tel, "temperature"),

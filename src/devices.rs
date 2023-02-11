@@ -52,6 +52,18 @@ where
     }
 }
 
+pub fn insert_value_in_device(id: String, key: String, val: Value) -> bool {
+    get_device_from_list(
+        id,
+        |device| {
+            device.values.insert(key, val);
+            true
+        },
+        |_| false,
+        false,
+    )
+}
+
 impl Device {
     pub fn trigger_action(&mut self, action: EventType) -> ActionType {
         match &mut self.subdevice {

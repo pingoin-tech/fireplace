@@ -5,7 +5,7 @@ use serde_json::Error;
 use std::str::FromStr;
 
 use crate::{
-    devices::{get_device_from_list, Device, DeviceType},
+    devices::{get_device_from_list, insert_value_in_device, Device, DeviceType},
     eventhandler::{get_event_handler, Value},
 };
 
@@ -56,10 +56,35 @@ pub fn decode_info(telegram: Telegram) {
                         DeviceType::Shelly(shel) => {
                             shel.inputs = info_data.inputs;
                             shel.meters = info_data.meters;
-                            shel.relays = info_data.relays;
                             shel.update = info_data.update;
-                            shel.lights = info_data.lights;
                             shel.rollers = info_data.rollers;
+                            if let Some(relays) = info_data.relays {
+                                for (pos, relay) in relays.iter().enumerate() {
+                                    device.values.insert(
+                                        format!("{}/{}/on", "relay", pos),
+                                        Value::Bool(relay.ison),
+                                    );
+                                    if let Some(overpower) = relay.overpower {
+                                        device.values.insert(
+                                            format!("{}/{}/overpower", "relay", pos),
+                                            Value::Bool(overpower),
+                                        );
+                                    }
+                                }
+                            }
+                            if let Some(lights) = info_data.lights {
+                                for (pos, light) in lights.iter().enumerate() {
+                                    device.values.insert(
+                                        format!("{}/{}/on", "light", pos),
+                                        Value::Bool(light.ison),
+                                    );
+                                    device.values.insert(
+                                        format!("{}/{}/brightness", "light", pos),
+                                        Value::Number(light.brightness as f32),
+                                    );
+                                }
+                            }
+
                             device.values.insert(
                                 "uptime".to_string(),
                                 Value::Number(info_data.uptime as f32),
@@ -93,7 +118,11 @@ pub fn decode_other(telegram: Telegram) {
             dev.last_message = Utc::now();
             println!(
                 "State input: {}/{:?}/{:?}/{}: {:?}",
-                dev.id,telegram.subdevice,telegram.subdevice_number, telegram.topic, telegram.payload
+                dev.id,
+                telegram.subdevice,
+                telegram.subdevice_number,
+                telegram.topic,
+                telegram.payload
             );
         },
         |_| {
@@ -106,14 +135,12 @@ pub fn decode_other(telegram: Telegram) {
     );
 }
 
-pub fn decode_value(telegram: Telegram,value:&str) {
+pub fn decode_value(telegram: Telegram, value: &str) {
     if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
         get_device_from_list(
             telegram.id,
             |shelly| {
-                shelly
-                    .values
-                    .insert(value.to_string(), Value::Number(val));
+                shelly.values.insert(value.to_string(), Value::Number(val));
             },
             |_| {},
             (),
@@ -179,4 +206,53 @@ fn trigger_new_data(id: String) {
         |handler| handler.trigger_event(format!("{}/new_data", id)),
         (),
     )
+}
+
+pub fn decode_roller(telegram: Telegram) {
+    if let Some(index) = telegram.subdevice_number {
+        match telegram.subdevice.as_deref() {
+            None => {
+                insert_value_in_device(
+                    telegram.id,
+                    format!("roller/{}/status", index),
+                    Value::String(telegram.payload),
+                );
+            }
+            Some("pos") => {
+                if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
+                    insert_value_in_device(
+                        telegram.id,
+                        format!("roller/{}/position", index),
+                        Value::Number(val),
+                    );
+                }
+            }
+            Some("energy") => {
+                if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
+                    insert_value_in_device(
+                        telegram.id,
+                        format!("roller/{}/energy", index),
+                        Value::Number(val),
+                    );
+                }
+            }
+            Some("power") => {
+                if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
+                    insert_value_in_device(
+                        telegram.id,
+                        format!("roller/{}/power", index),
+                        Value::Number(val),
+                    );
+                }
+            }
+            Some("stop_reason") => {
+                insert_value_in_device(
+                    telegram.id,
+                    format!("roller/{}/stop_reaso", index),
+                    Value::String(telegram.payload),
+                );
+            }
+            _ => {}
+        }
+    }
 }

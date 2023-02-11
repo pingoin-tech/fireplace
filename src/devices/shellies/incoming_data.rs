@@ -25,11 +25,11 @@ pub struct WifiState {
 #[ts(export)]
 pub struct RelaysState {
     pub ison: bool,
-    has_timer: bool,
-    timer_started: i32,
-    timer_duration: i32,
-    timer_remaining: i32,
-    source: String,
+    pub has_timer: bool,
+    pub timer_started: i32,
+    pub timer_duration: i32,
+    pub timer_remaining: i32,
+    pub source: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub overpower: Option<bool>,
 }
@@ -70,14 +70,14 @@ pub struct UpdateStat {
 #[ts(export)]
 pub struct LightStat {
     pub ison: bool,
-    source: String,
-    has_timer: bool,
-    timer_started: u32,
-    timer_duration: u32,
-    timer_remaining: u32,
-    mode: String,
-    brightness: u8,
-    transition: u16,
+    pub source: String,
+    pub has_timer: bool,
+    pub timer_started: u32,
+    pub timer_duration: u32,
+    pub timer_remaining: u32,
+    pub mode: String,
+    pub brightness: u8,
+    pub transition: u16,
 }
 #[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]
 #[ts(export)]
