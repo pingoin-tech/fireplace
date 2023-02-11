@@ -137,14 +137,7 @@ pub fn decode_other(telegram: Telegram) {
 
 pub fn decode_value(telegram: Telegram, value: &str) {
     if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
-        get_device_from_list(
-            telegram.id,
-            |shelly| {
-                shelly.values.insert(value.to_string(), Value::Number(val));
-            },
-            |_| {},
-            (),
-        )
+        insert_value_in_device(telegram.id, value.to_string(), Value::Number(val));
     }
 }
 
@@ -153,30 +146,20 @@ pub fn decode_subdevice(telegram: Telegram, subdev: &str) {
         match telegram.subdevice.as_deref() {
             Some("power") => {
                 if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
-                    get_device_from_list(
+                    insert_value_in_device(
                         telegram.id.clone(),
-                        |shelly| {
-                            shelly
-                                .values
-                                .insert(format!("{}/{}/power", subdev, index), Value::Number(val));
-                        },
-                        |_| {},
-                        (),
-                    )
+                        format!("{}/{}/power", subdev, index),
+                        Value::Number(val),
+                    );
                 }
             }
             Some("energy") => {
                 if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
-                    get_device_from_list(
+                    insert_value_in_device(
                         telegram.id.clone(),
-                        |shelly| {
-                            shelly
-                                .values
-                                .insert(format!("{}/{}/energy", subdev, index), Value::Number(val));
-                        },
-                        |_| {},
-                        (),
-                    )
+                        format!("{}/{}/energy", subdev, index),
+                        Value::Number(val),
+                    );
                 }
             }
             Some(_) => {}
@@ -185,15 +168,10 @@ pub fn decode_subdevice(telegram: Telegram, subdev: &str) {
                 if telegram.payload.as_str() == "on" {
                     on = true;
                 }
-                get_device_from_list(
+                insert_value_in_device(
                     telegram.id.clone(),
-                    |shelly| {
-                        shelly
-                            .values
-                            .insert(format!("{}/{}/on", subdev, index), Value::Bool(on));
-                    },
-                    |_| {},
-                    (),
+                    format!("{}/{}/on", subdev, index),
+                    Value::Bool(on),
                 );
             }
         }
@@ -210,6 +188,7 @@ fn trigger_new_data(id: String) {
 
 pub fn decode_roller(telegram: Telegram) {
     if let Some(index) = telegram.subdevice_number {
+        let id = telegram.id.clone();
         match telegram.subdevice.as_deref() {
             None => {
                 insert_value_in_device(
@@ -254,5 +233,6 @@ pub fn decode_roller(telegram: Telegram) {
             }
             _ => {}
         }
+        trigger_new_data(id);
     }
 }
