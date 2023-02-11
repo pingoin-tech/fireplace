@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use actix_files as fs;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-use home_center::{
+use fireplace::{
     devices::SENSOR_LIST,
     eventhandler::{get_event_handler, EventType, Handler, EVENT_HANDLER},
     mqtt,

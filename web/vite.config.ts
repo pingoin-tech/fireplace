@@ -32,8 +32,8 @@ export default defineConfig({
     includeAssets: ["/favicon.png"],
     strategies: "injectManifest",
     manifest: {
-      name: "Test Project",
-      short_name: "Test",
+      name: "Fireplace",
+      short_name: "Fireplace",
       theme_color: "#ffffff",
       start_url: "/",
       display: "standalone",
