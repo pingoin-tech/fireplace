@@ -25,7 +25,7 @@ onMounted(() => {
 
     </div>
     <div id="header_middle">
-      Home Center
+      Fireplace
     </div>
     <div id="header_right">
 
@@ -38,6 +38,6 @@ onMounted(() => {
   </nav>
   <router-view />
   <footer>
-    &copy; Awesome Company
+    &copy; Pingoin-Tech
   </footer>
 </template>

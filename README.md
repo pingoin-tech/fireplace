@@ -1,6 +1,6 @@
 <!-- @format -->
 
-# home_center
+# fireplace
 
 <!-- PROJECT SHIELDS -->
 
@@ -14,7 +14,7 @@
 
 ## About The Project
 
-The home_center is an fully in rust implemented Home automation service
+The fireplace is an fully in rust implemented Home automation service
 
 <!-- GETTING STARTED -->
 
@@ -29,7 +29,7 @@ An installed rust-toolchain. Look at <https://rustup.rs/>.
 1. Clone the repo
 
    ```sh
-   git clone https://github.com/pingoin-tech/home_center.git
+   git clone https://github.com/pingoin-tech/fireplace.git
    ```
 2. Create Type-Bindings for frontend
 
@@ -57,7 +57,7 @@ TODO
 
 ## Roadmap
 
-See the [open issues](https://github.com/pingoin-tech/home_center/issues) for a list of proposed features (and known issues).
+See the [open issues](https://github.com/pingoin-tech/fireplace/issues) for a list of proposed features (and known issues).
 
 <!-- CONTRIBUTING -->
 
@@ -81,7 +81,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
 
-Project Link: [https://github.com/pingoin-tech/home_center](https://github.com/pingoin-tech/home_center)
+Project Link: [https://github.com/pingoin-tech/fireplace](https://github.com/pingoin-tech/fireplace)
 
 <!-- ACKNOWLEDGEMENTS -->
 
@@ -93,13 +93,13 @@ Project Link: [https://github.com/pingoin-tech/home_center](https://github.com/p
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
-[contributors-shield]: https://img.shields.io/github/contributors/pingoin-tech/home_center.svg?style=for-the-badge
-[contributors-url]: https://github.com/pingoin-tech/home_center/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/pingoin-tech/home_center.svg?style=for-the-badge
-[forks-url]: https://github.com/pingoin-tech/home_center/network/members
-[stars-shield]: https://img.shields.io/github/stars/pingoin-tech/home_center.svg?style=for-the-badge
-[stars-url]: https://github.com/pingoin-tech/home_center/stargazers
-[issues-shield]: https://img.shields.io/github/issues/pingoin-tech/home_center.svg?style=for-the-badge
-[issues-url]: https://github.com/pingoin-tech/home_center/issues
-[license-shield]: https://img.shields.io/github/license/pingoin-tech/home_center?style=for-the-badge
-[license-url]: https://github.com/pingoin-tech/home_center/blob/master/LICENSE.txt
+[contributors-shield]: https://img.shields.io/github/contributors/pingoin-tech/fireplace.svg?style=for-the-badge
+[contributors-url]: https://github.com/pingoin-tech/fireplace/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/pingoin-tech/fireplace.svg?style=for-the-badge
+[forks-url]: https://github.com/pingoin-tech/fireplace/network/members
+[stars-shield]: https://img.shields.io/github/stars/pingoin-tech/fireplace.svg?style=for-the-badge
+[stars-url]: https://github.com/pingoin-tech/fireplace/stargazers
+[issues-shield]: https://img.shields.io/github/issues/pingoin-tech/fireplace.svg?style=for-the-badge
+[issues-url]: https://github.com/pingoin-tech/fireplace/issues
+[license-shield]: https://img.shields.io/github/license/pingoin-tech/fireplace?style=for-the-badge
+[license-url]: https://github.com/pingoin-tech/fireplace/blob/master/LICENSE.txt
