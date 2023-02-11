@@ -1,5 +1,5 @@
 # Changelog
-## current:
+## [0.1.0](https://github.com/pingoin-tech/fireplace/releases/tag/0.1.0):
 ### Features:
 - simplifying shelly decoders ([a09c410](https://github.com/pingoin-tech/fireplace/commit/a09c4100666082add9744300af1d182c8df8dc49))
 - stuctured telegram handling ([7086e9b](https://github.com/pingoin-tech/fireplace/commit/7086e9bee41cd6945235392d12c3080552cb1c6e))
@@ -23,6 +23,7 @@
 - decoding shelly announcement ([8b38c9a](https://github.com/pingoin-tech/fireplace/commit/8b38c9a3b86a36067a0a91432326524d8d05b026))
 - simple MQTT subscription ([c82b03b](https://github.com/pingoin-tech/fireplace/commit/c82b03bece09fca3d99251ae8de68d2145bb173e))
 ### Organisation:
+- renaming project ([8c565c6](https://github.com/pingoin-tech/fireplace/commit/8c565c66bfd7ff56aef5fe56c3c0bedae035205e))
 - license and Readme ([3cd0398](https://github.com/pingoin-tech/fireplace/commit/3cd039850902a6dc2bc1cd96a9a9b4c4210675e8))
 ### Other:
 - feat:implemented trigger action via REST-api ([a8ded70](https://github.com/pingoin-tech/fireplace/commit/a8ded705df0188d5471d6494f5a23941cd9d7f1d))
