@@ -1,5 +1,5 @@
 use self::{
-    decodings::{decode_light, decode_other, decode_relay, decode_voltage},
+    decodings::{decode_other, decode_subdevice, decode_voltage},
     incoming_data::{InputStat, LightStat, MeterStat, RelaysState, RollerStat, UpdateStat},
 };
 use crate::eventhandler::{ActionType, EventType};
@@ -28,17 +28,6 @@ pub struct Shelly {
     pub update: UpdateStat,
     pub meters: Vec<MeterStat>,
     pub inputs: Vec<InputStat>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub overtemperature: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub overpower: Option<bool>,
-    pub uptime: u32,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub voltage: Option<f32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub power: Option<f32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub energy: Option<f32>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, TS)]
@@ -114,14 +103,8 @@ impl Shelly {
                 update: UpdateStat::default(),
                 meters: Vec::new(),
                 inputs: Vec::new(),
-                uptime: 0,
                 lights: None,
                 rollers: None,
-                overtemperature: None,
-                overpower: None,
-                voltage: None,
-                power: None,
-                energy: None,
             },
             actions,
             events,
@@ -183,8 +166,8 @@ pub fn decode_shelly_sub(content: &Publish) {
         "announce" => decode_announce(tel),
         "command" => {}
         "online" => {}
-        "relay" => decode_relay(tel),
-        "light" => decode_light(tel),
+        "relay" => decode_subdevice(tel, "relay"),
+        "light" => decode_subdevice(tel, "light"),
         "info" => decode_info(tel),
         "voltage" => decode_voltage(tel),
         _ => {

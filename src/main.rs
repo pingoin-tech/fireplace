@@ -54,7 +54,7 @@ async fn main() {
     let (_http, _) = tokio::join!(http_handler, event_handler_loop());
 }
 
-#[get("/api/devices/")]
+#[get("/api/devices")]
 async fn hello() -> impl Responder {
     match SENSOR_LIST.lock() {
         Ok(mut list_option) => {

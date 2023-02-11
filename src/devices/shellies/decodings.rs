@@ -58,11 +58,22 @@ pub fn decode_info(telegram: Telegram) {
                             shel.meters = info_data.meters;
                             shel.relays = info_data.relays;
                             shel.update = info_data.update;
-                            shel.uptime = info_data.uptime;
                             shel.lights = info_data.lights;
                             shel.rollers = info_data.rollers;
-                            shel.overpower = info_data.overpower;
-                            shel.overtemperature = info_data.overtemperature;
+                            device.values.insert(
+                                "uptime".to_string(),
+                                Value::Number(info_data.uptime as f32),
+                            );
+                            if let Some(op) = info_data.overpower {
+                                device
+                                    .values
+                                    .insert("overpower".to_string(), Value::Bool(op));
+                            }
+                            if let Some(ot) = info_data.overtemperature {
+                                device
+                                    .values
+                                    .insert("overtemperature".to_string(), Value::Bool(ot));
+                            }
                         }
                         _ => {}
                     };
@@ -110,23 +121,54 @@ pub fn decode_voltage(telegram: Telegram) {
     }
 }
 
-pub fn decode_relay(telegram: Telegram) {
+pub fn decode_subdevice(telegram: Telegram, subdev: &str) {
     if let Some(index) = telegram.subdevice_number {
-        if telegram.subdevice == None {
-            let mut on = false;
-            if telegram.payload.as_str() == "on" {
-                on = true;
+        match telegram.subdevice.as_deref() {
+            Some("power") => {
+                if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
+                    get_device_from_list(
+                        telegram.id.clone(),
+                        |shelly| {
+                            shelly
+                                .values
+                                .insert(format!("{}/{}/power", subdev, index), Value::Number(val));
+                        },
+                        |_| {},
+                        (),
+                    )
+                }
             }
-            get_device_from_list(
-                telegram.id.clone(),
-                |shelly| {
-                    shelly
-                        .values
-                        .insert(format!("relay/{}/on", index), Value::Bool(on));
-                },
-                |_| {},
-                (),
-            );
+            Some("energy") => {
+                if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
+                    get_device_from_list(
+                        telegram.id.clone(),
+                        |shelly| {
+                            shelly
+                                .values
+                                .insert(format!("{}/{}/energy", subdev, index), Value::Number(val));
+                        },
+                        |_| {},
+                        (),
+                    )
+                }
+            }
+            Some(_) => {}
+            None => {
+                let mut on = false;
+                if telegram.payload.as_str() == "on" {
+                    on = true;
+                }
+                get_device_from_list(
+                    telegram.id.clone(),
+                    |shelly| {
+                        shelly
+                            .values
+                            .insert(format!("{}/{}/on", subdev, index), Value::Bool(on));
+                    },
+                    |_| {},
+                    (),
+                );
+            }
         }
     }
     trigger_new_data(telegram.id)
@@ -137,58 +179,4 @@ fn trigger_new_data(id: String) {
         |handler| handler.trigger_event(format!("{}/new_data", id)),
         (),
     )
-}
-
-pub fn decode_light(telegram: Telegram) {
-    let index_op: Option<usize> = telegram.subdevice_number;
-    match telegram.subdevice.as_deref() {
-        Some("power") => {
-            if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
-                get_device_from_list(
-                    telegram.id.clone(),
-                    |shelly| {
-                        shelly
-                            .values
-                            .insert("power".to_string(), Value::Number(val));
-                    },
-                    |_| {},
-                    (),
-                )
-            }
-        }
-        Some("energy") => {
-            if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
-                get_device_from_list(
-                    telegram.id.clone(),
-                    |shelly| {
-                        shelly
-                            .values
-                            .insert("power".to_string(), Value::Number(val));
-                    },
-                    |_| {},
-                    (),
-                )
-            }
-        }
-        Some(_) => {}
-        None => {
-            if let Some(index) = index_op {
-                let mut on = false;
-                if telegram.payload.as_str() == "on" {
-                    on = true;
-                }
-                get_device_from_list(
-                    telegram.id.clone(),
-                    |shelly| {
-                        shelly
-                            .values
-                            .insert(format!("light/{}/on", index), Value::Bool(on));
-                    },
-                    |_| {},
-                    (),
-                );
-            }
-        }
-    }
-    trigger_new_data(telegram.id)
 }
