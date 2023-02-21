@@ -1,5 +1,5 @@
+use fireplace::devices::shellies::{Shelly, ShellyType};
 use serde::{Deserialize, Serialize};
-use ts_rs::TS;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ShellyAnnounce {
     pub id: String,
@@ -12,8 +12,49 @@ pub struct ShellyAnnounce {
     pub mode: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]
-#[ts(export)]
+impl ShellyAnnounce {
+
+    pub fn to_shelly(&self)-> (Shelly, Vec<String>, Vec<String>){
+        let mut shelly_type = ShellyType::Shelly1;
+        let mut actions = vec!["announce".to_string(), "update".to_string()];
+        let events = vec!["new_data".to_string()];
+        match self.model.as_str() {
+            "SHSW-25" => {
+                if self.mode == Some(String::from("roller")) {
+                    shelly_type = ShellyType::Shelly25Roller;
+                } else {
+                    shelly_type = ShellyType::Shelly25Switch;
+                }
+            }
+            "SHSW-1" => {
+                shelly_type = ShellyType::Shelly1;
+            }
+            "SHDM-2" => {
+                shelly_type = ShellyType::ShellyDimmer;
+                actions.push("on".to_string());
+                actions.push("off".to_string());
+            }
+            _ => {}
+        }
+
+        (
+            Shelly {
+                fw_ver: self.fw_ver.clone(),
+                shelly_type: shelly_type,
+                // update: UpdateStat::default(),
+                //meters: Vec::new(),
+                //inputs: Vec::new(),
+                //rollers: None,
+            },
+            actions,
+            events,
+        )
+
+    }
+    
+}
+
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct WifiState {
     connected: bool,
     ssid: String,
@@ -21,8 +62,7 @@ pub struct WifiState {
     pub rssi: i16,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]
-#[ts(export)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct RelaysState {
     pub ison: bool,
     pub has_timer: bool,
@@ -34,8 +74,7 @@ pub struct RelaysState {
     pub overpower: Option<bool>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]
-#[ts(export)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct MeterStat {
     power: f32,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -49,16 +88,14 @@ pub struct MeterStat {
     is_valid: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]
-#[ts(export)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct InputStat {
     input: u8,
     event: String,
     event_cnt: u32,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]
-#[ts(export)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct UpdateStat {
     status: String,
     has_update: bool,
@@ -66,8 +103,7 @@ pub struct UpdateStat {
     old_version: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]
-#[ts(export)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct LightStat {
     pub ison: bool,
     pub source: String,
@@ -79,8 +115,7 @@ pub struct LightStat {
     pub brightness: u8,
     pub transition: u16,
 }
-#[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]
-#[ts(export)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct TemperatureStat {
     #[serde(rename = "tC")]
     t_c: f32,
@@ -89,8 +124,7 @@ pub struct TemperatureStat {
     is_valid: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]
-#[ts(export)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct RollerStat {
     state: String,
     source: String,
@@ -105,8 +139,7 @@ pub struct RollerStat {
     positioning: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, TS)]
-#[ts(export)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct ShellyInfo {
     pub wifi_sta: WifiState,
     time: String,

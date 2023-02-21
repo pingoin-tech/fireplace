@@ -1,15 +1,12 @@
 /** @format */
-
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
   font-size: 16px;
   line-height: 24px;
   font-weight: 400;
-
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -24,11 +21,9 @@
 }
 
 body {
-  font-family: "DaxWebPro", "GudeaBold", "Trebuchet MS", "VL Gothic", Trebuchet,
-    Arial, Verdana, Geneva, Helvetica, sans-serif;
+  font-family: "DaxWebPro", "GudeaBold", "Trebuchet MS", "VL Gothic", Trebuchet, Arial, Verdana, Geneva, Helvetica, sans-serif;
   max-width: 75rem;
   min-width: 50rem;
-
   margin: auto;
 }
 
@@ -42,12 +37,12 @@ footer {
 
 @media screen {
   nav,
-  footer,
-  article,
-  table,
-  figure,
-  .info,
-  .safety {
+footer,
+article,
+table,
+figure,
+.info,
+.safety {
     border: 1px solid rgb(221, 221, 221);
     border-radius: 0.25rem;
     box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
@@ -55,12 +50,11 @@ footer {
     width: auto;
   }
 }
-
 @media print {
   table,
-  figure,
-  .info,
-  .safety {
+figure,
+.info,
+.safety {
     border: 1px solid rgb(221, 221, 221);
     border-radius: 0.25rem;
     box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
@@ -68,7 +62,6 @@ footer {
     width: auto;
   }
 }
-
 header {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
@@ -86,28 +79,26 @@ nav {
   margin-bottom: 2.75rem;
   overflow: auto;
   max-height: calc(100vh - 2.5rem);
-
-  ul {
-    list-style-type: none;
-    margin-left: 0.5rem;
-    padding: 0;
-
-    li a {
-      display: block;
-      color: #ffffff;
-      padding: 0.25rem 0.5rem;
-      text-decoration: none;
-      font-size: 75%;
-    }
-
-    li a:hover {
-      background-color: #94b1c1;
-      color: white;
-      border-radius: 0.25rem;
-    }
-  }
-
-  @media print {
+}
+nav ul {
+  list-style-type: none;
+  margin-left: 0.5rem;
+  padding: 0;
+}
+nav ul li a {
+  display: block;
+  color: #ffffff;
+  padding: 0.25rem 0.5rem;
+  text-decoration: none;
+  font-size: 75%;
+}
+nav ul li a:hover {
+  background-color: #94b1c1;
+  color: white;
+  border-radius: 0.25rem;
+}
+@media print {
+  nav {
     display: none;
   }
 }
@@ -119,8 +110,9 @@ nav {
 main {
   display: block;
   margin: 1rem 0 0 calc(20% + 0.5rem);
-
-  @media print {
+}
+@media print {
+  main {
     margin: 0.5rem;
   }
 }
@@ -180,14 +172,13 @@ figure {
   margin: 0.25rem;
   max-width: 33rem;
   width: calc(100% - 1rem);
-
-  img {
-    display: block;
-    page-break-inside: avoid;
-    border-radius: 0.25rem;
-    margin-bottom: 0.5rem;
-    width: calc(100% - 1rem);
-  }
+}
+figure img {
+  display: block;
+  page-break-inside: avoid;
+  border-radius: 0.25rem;
+  margin-bottom: 0.5rem;
+  width: calc(100% - 1rem);
 }
 
 figcaption {
@@ -196,11 +187,9 @@ figcaption {
   text-align: center;
 }
 
-tbody {
-  td,
-  th {
-    border-top: 1px solid rgb(221, 221, 221);
-  }
+tbody td,
+tbody th {
+  border-top: 1px solid rgb(221, 221, 221);
 }
 
 table {
@@ -280,7 +269,7 @@ hr {
 
 .proControlList {
   width: 25em;
-  .statusTable {
-    background-color: #cccccc;
-  }
+}
+.proControlList .statusTable {
+  background-color: #cccccc;
 }

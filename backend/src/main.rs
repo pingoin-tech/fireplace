@@ -2,11 +2,12 @@ use std::time::Duration;
 
 use actix_files as fs;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-use fireplace::{
+use backend::{
     devices::SENSOR_LIST,
-    eventhandler::{get_event_handler, EventType, Handler, EVENT_HANDLER},
+    eventhandler::{get_event_handler, Handler, EVENT_HANDLER},
     mqtt,
 };
+use fireplace::eventhandler::EventType;
 use rumqttc::QoS;
 use tokio::{self, task, time::sleep};
 
@@ -28,7 +29,7 @@ async fn main() {
 
     {
         EVENT_HANDLER
-            .lock()
+            .lock() 
             .expect("could not lock")
             .get_or_insert(Handler::new(client).await);
     }
@@ -45,7 +46,7 @@ async fn main() {
         App::new()
             .service(trigger_action)
             .service(hello)
-            .service(fs::Files::new("/", "./web/dist/").index_file("index.html"))
+            .service(fs::Files::new("/", "./dist/").index_file("index.html"))
     })
     .bind(("0.0.0.0", 8080))
     .unwrap()
@@ -67,8 +68,10 @@ async fn hello() -> impl Responder {
     HttpResponse::Ok().body("bla")
 }
 
-#[post("/api/trigger-action/")]
+#[post("/api/trigger-action")]
 async fn trigger_action(data: web::Json<EventType>) -> impl Responder {
+    println!("{:?}",&data.0);
+
     let result = get_event_handler(|handler| handler.force_action(data.0), false);
 
     if result {

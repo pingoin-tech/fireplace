@@ -3,7 +3,7 @@
       {
         "label": "backend: serve",
         "type": "shell",
-        "command": "cargo watch -x run -c",
+        "command": "cargo watch -w backend -w src -x run -c",
         "group": "build",
         "presentation": {
           "reveal": "always",
@@ -50,9 +50,8 @@
         },
       {
         "label": "frontend: serve",
-        "type": "npm",
-        "script": "dev",
-        "path": "web/",
+        "type": "shell",
+        "command": "cd frontend && trunk serve",
         "problemMatcher": [],
         "detail": "Serve Frontend",
         "options": {
@@ -62,9 +61,8 @@
         }
       },
       {
-        "type": "npm",
-        "script": "build",
-        "path": "web/",
+        "type": "shell",
+        "command": "cd frontend && trunk build --release",
         "group": "build",
         "problemMatcher": [],
         "label": "frontend: build",
@@ -72,19 +70,6 @@
         "options": {
           "statusbar": {
             "label": "$(globe) Build"
-          }
-        }
-      },
-      {
-        "type": "npm",
-        "script": "install",
-        "path": "web/",
-        "problemMatcher": [],
-        "label": "frontend: install dependencies",
-        "detail": "install dependencies from package",
-        "options": {
-          "statusbar": {
-            "label": "$(globe) install"
           }
         }
       }

@@ -1,43 +1,38 @@
-use self::{
-    decodings::{
-        decode_announce, decode_info, decode_other, decode_roller, decode_subdevice, decode_value,
-    },
-    incoming_data::{InputStat, MeterStat, RollerStat, UpdateStat},
-};
 use crate::eventhandler::{ActionType, EventType};
-use std::str::FromStr;
-use ts_rs::TS;
 
-use rumqttc::Publish;
 use serde::{Deserialize, Serialize};
 
-mod decodings;
-mod incoming_data;
-use incoming_data::ShellyAnnounce;
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ShellyAnnounce {
+    pub id: String,
+    pub model: String,
+    pub mac: String,
+    pub ip: String,
+    pub new_fw: bool,
+    pub fw_ver: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mode: Option<String>,
+}
 
-#[derive(Serialize, Deserialize, Debug, Clone, TS)]
-#[ts(export)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Shelly {
     pub fw_ver: String,
     pub shelly_type: ShellyType,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub rollers: Option<Vec<RollerStat>>,
-    pub update: UpdateStat,
-    pub meters: Vec<MeterStat>,
-    pub inputs: Vec<InputStat>,
+    //#[serde(skip_serializing_if = "Option::is_none")]
+    //pub rollers: Option<Vec<RollerStat>>,
+    //pub update: UpdateStat,
+    //pub meters: Vec<MeterStat>,
+    //pub inputs: Vec<InputStat>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, TS)]
-#[ts(export)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
 pub enum ShellyType {
     Shelly1,
     ShellyDimmer,
     Shelly25Roller,
     Shelly25Switch,
 }
-
-#[derive(Serialize, Deserialize, Debug, Clone, TS)]
-#[ts(export)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Telegram {
     pub id: String,
     pub subdevice: Option<String>,
@@ -68,7 +63,7 @@ impl Shelly {
         }
     }
 
-    fn from_announce(data: ShellyAnnounce) -> (Shelly, Vec<String>, Vec<String>) {
+   pub fn from_announce(data: ShellyAnnounce) -> (Shelly, Vec<String>, Vec<String>) {
         let mut shelly_type = ShellyType::Shelly1;
 
         let mut actions = vec!["announce".to_string(), "update".to_string()];
@@ -96,98 +91,13 @@ impl Shelly {
             Shelly {
                 fw_ver: data.fw_ver,
                 shelly_type: shelly_type,
-                update: UpdateStat::default(),
-                meters: Vec::new(),
-                inputs: Vec::new(),
-                rollers: None,
+                // update: UpdateStat::default(),
+                //meters: Vec::new(),
+                //inputs: Vec::new(),
+                //rollers: None,
             },
             actions,
             events,
         )
-    }
-}
-
-pub fn decode_shelly_sub(content: &Publish) {
-    let topic = content.topic.split("/");
-
-    let mut topic_list = Vec::new();
-    topic.for_each(|val| topic_list.push(val.to_string()));
-    let payload = String::from_utf8((&content.payload).to_vec()).unwrap();
-    let tel = match topic_list.len() {
-        3 => Telegram {
-            id: topic_list[1].clone(),
-            subdevice: None,
-            subdevice_number: None,
-            topic: topic_list[2].clone(),
-            payload: payload,
-        },
-        4 => {
-            let index = usize::from_str(topic_list[3].clone().as_str());
-            if let Ok(index) = index {
-                Telegram {
-                    id: topic_list[1].clone(),
-                    subdevice: None,
-                    subdevice_number: Some(index),
-                    topic: topic_list[2].clone(),
-                    payload: payload,
-                }
-            } else {
-                Telegram {
-                    id: topic_list[1].clone(),
-                    subdevice: Some(topic_list[3].clone()),
-                    subdevice_number: None,
-                    topic: topic_list[2].clone(),
-                    payload: payload,
-                }
-            }
-        }
-        5 => {
-            let index = usize::from_str(topic_list[3].clone().as_str());
-            if let Ok(index) = index {
-                Telegram {
-                    id: topic_list[1].clone(),
-                    subdevice: Some(topic_list[4].clone()),
-                    subdevice_number: Some(index),
-                    topic: topic_list[2].clone(),
-                    payload: payload,
-                }
-            } else {
-                Telegram {
-                    id: topic_list[1].clone(),
-                    subdevice: Some(topic_list[3].clone()),
-                    subdevice_number: None,
-                    topic: topic_list[2].clone(),
-                    payload: payload,
-                }
-            }
-        }
-        _ => Telegram {
-            id: "".to_string(),
-            subdevice: None,
-            subdevice_number: None,
-            topic: topic_list[1].clone(),
-            payload: payload,
-        },
-    };
-
-    match tel.topic.as_str() {
-        "announce" => decode_announce(tel),
-        "command" => {}
-        "online" => {}
-        "temperature_f" => {}
-        "overtemperature" => {}
-        "overpower" => {}
-        "loaderror" => {}
-        "temperature_status" => {}
-        "roller" => decode_roller(tel),
-        "relay" => decode_subdevice(tel, "relay"),
-        "light" => decode_subdevice(tel, "light"),
-        "input" => decode_subdevice(tel, "input"),
-        "info" => decode_info(tel),
-        "voltage" => decode_value(tel, "voltage"),
-        "temperature" => decode_value(tel, "temperature"),
-        _ => {
-            decode_other(tel);
-        }
     }
 }

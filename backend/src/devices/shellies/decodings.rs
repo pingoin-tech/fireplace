@@ -5,13 +5,14 @@ use serde_json::Error;
 use std::str::FromStr;
 
 use crate::{
-    devices::{get_device_from_list, insert_value_in_device, Device, DeviceType},
-    eventhandler::{get_event_handler, Value},
+    devices::{get_device_from_list, insert_value_in_device, Device},
+    eventhandler::{get_event_handler},
 };
+use fireplace::eventhandler::Value;
+use fireplace::devices::{DeviceType};
 
 use super::{
-    incoming_data::{ShellyAnnounce, ShellyInfo},
-    Shelly, Telegram,
+    incoming_data::{ShellyAnnounce, ShellyInfo}, Telegram,
 };
 
 pub fn decode_announce(content: Telegram) {
@@ -25,7 +26,7 @@ pub fn decode_announce(content: Telegram) {
             |list| {
                 let id = device.id.clone();
                 let ip = device.ip.clone();
-                let (shelly, actions, events) = Shelly::from_announce(device);
+                let (shelly, actions, events) =device.to_shelly();
                 let sub_device = DeviceType::Shelly(shelly);
                 list.push(Device {
                     id: id,
@@ -53,11 +54,7 @@ pub fn decode_info(telegram: Telegram) {
                 |device| {
                     device.rssi = info_data.wifi_sta.rssi;
                     match &mut device.subdevice {
-                        DeviceType::Shelly(shel) => {
-                            shel.inputs = info_data.inputs;
-                            shel.meters = info_data.meters;
-                            shel.update = info_data.update;
-                            shel.rollers = info_data.rollers;
+                        DeviceType::Shelly(_shel) => {
                             if let Some(relays) = info_data.relays {
                                 for (pos, relay) in relays.iter().enumerate() {
                                     device.values.insert(
