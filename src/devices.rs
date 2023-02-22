@@ -1,9 +1,9 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-pub mod shellies; 
+pub mod shellies;
 use shellies::Shelly;
 
-use std::{collections::HashMap};
+use std::collections::BTreeMap;
 
 use super::eventhandler::{ActionType, EventType, Value};
 
@@ -16,10 +16,10 @@ pub struct Device {
     pub rssi: i16,
     pub available_actions: Vec<String>,
     pub available_events: Vec<String>,
-    pub values: HashMap<String, Value>,
+    pub values: BTreeMap<String, Value>,
 }
 
-#[derive(Serialize, Deserialize, Clone,Debug,PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum DeviceType {
     Shelly(Shelly),

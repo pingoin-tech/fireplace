@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use chrono::Utc;
 use serde_json::Error;
@@ -6,13 +6,14 @@ use std::str::FromStr;
 
 use crate::{
     devices::{get_device_from_list, insert_value_in_device, Device},
-    eventhandler::{get_event_handler},
+    eventhandler::get_event_handler,
 };
+use fireplace::devices::DeviceType;
 use fireplace::eventhandler::Value;
-use fireplace::devices::{DeviceType};
 
 use super::{
-    incoming_data::{ShellyAnnounce, ShellyInfo}, Telegram,
+    incoming_data::{ShellyAnnounce, ShellyInfo},
+    Telegram,
 };
 
 pub fn decode_announce(content: Telegram) {
@@ -26,7 +27,7 @@ pub fn decode_announce(content: Telegram) {
             |list| {
                 let id = device.id.clone();
                 let ip = device.ip.clone();
-                let (shelly, actions, events) =device.to_shelly();
+                let (shelly, actions, events) = device.to_shelly();
                 let sub_device = DeviceType::Shelly(shelly);
                 list.push(Device {
                     id: id,
@@ -36,7 +37,7 @@ pub fn decode_announce(content: Telegram) {
                     available_actions: actions,
                     available_events: events,
                     rssi: 0,
-                    values: HashMap::new(),
+                    values: BTreeMap::new(),
                 });
             },
             (),

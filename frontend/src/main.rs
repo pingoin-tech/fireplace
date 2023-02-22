@@ -3,6 +3,7 @@ use gloo_console::log;
 use gloo_net::http::Request;
 use wasm_bindgen::JsValue;
 use yew::prelude::*;
+use yew_hooks::prelude::*;
 mod device_list;
 use device_list::DeviceList;
 
@@ -11,14 +12,15 @@ fn app() -> Html {
     let devices = use_state(|| vec![]);
     {
         let devices = devices.clone();
-        use_effect_with_deps(
-            move |_| {
+        use_interval(
+            move || {
                 let devices = devices.clone();
                 wasm_bindgen_futures::spawn_local(async move {
                     match Request::get("/api/devices").send().await {
                         Ok(result) => match result.json().await {
                             Ok(res) => {
-                                let fetched_videos: Vec<Device> = res;
+                                let mut fetched_videos: Vec<Device> = res;
+                                fetched_videos.sort_by(|a, b| b.id.cmp(&a.id));
                                 devices.set(fetched_videos);
                             }
                             Err(err) => {
@@ -30,16 +32,15 @@ fn app() -> Html {
                         }
                     }
                 });
-                || ()
             },
-            (),
+            500,
         );
     }
 
     let action_closure = |event: EventType| {
         wasm_bindgen_futures::spawn_local(async move {
             if let Ok(req) = Request::post("/api/trigger-action").json(&event) {
-                let _=req.send().await;
+                let _ = req.send().await;
             }
         });
     };

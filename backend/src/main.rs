@@ -29,7 +29,7 @@ async fn main() {
 
     {
         EVENT_HANDLER
-            .lock() 
+            .lock()
             .expect("could not lock")
             .get_or_insert(Handler::new(client).await);
     }
@@ -60,6 +60,7 @@ async fn hello() -> impl Responder {
     match SENSOR_LIST.lock() {
         Ok(mut list_option) => {
             if let Some(list) = list_option.as_mut() {
+                list.sort_by(|a, b| b.id.cmp(&a.id));
                 return HttpResponse::Ok().json(list);
             }
         }
@@ -70,7 +71,7 @@ async fn hello() -> impl Responder {
 
 #[post("/api/trigger-action")]
 async fn trigger_action(data: web::Json<EventType>) -> impl Responder {
-    println!("{:?}",&data.0);
+    println!("{:?}", &data.0);
 
     let result = get_event_handler(|handler| handler.force_action(data.0), false);
 
