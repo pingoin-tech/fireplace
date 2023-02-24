@@ -11,6 +11,7 @@ use super::eventhandler::{ActionType, EventType, Value};
 pub struct Device {
     pub id: String,
     pub ip: String,
+    pub mac:String,
     pub last_message: DateTime<Utc>,
     pub subdevice: DeviceType,
     pub rssi: i16,

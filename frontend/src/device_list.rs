@@ -36,7 +36,7 @@ pub fn device_list(DeviceListProps { devices, on_click }: &DeviceListProps) -> H
             html! {
                 <tr key={device.id.clone()}>
                     <td>{ device.id.clone() }</td>
-                    <td><a href={format!("http://{}",device.ip)} target={"_blank"}>{ device.ip.clone() }</a></td>
+                    <td><a href={format!("http://{}",device.ip)} target={"_blank"}>{ device.ip.clone() }{"/"}</a><br/>{ device.mac.clone() }</td>
                     <td>{ device.rssi }</td>
                     <td><ul>{values}</ul></td>
                     <td>{actions}</td>

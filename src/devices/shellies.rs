@@ -14,19 +14,8 @@ pub struct ShellyAnnounce {
     pub mode: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct Shelly {
-    pub fw_ver: String,
-    pub shelly_type: ShellyType,
-    //#[serde(skip_serializing_if = "Option::is_none")]
-    //pub rollers: Option<Vec<RollerStat>>,
-    //pub update: UpdateStat,
-    //pub meters: Vec<MeterStat>,
-    //pub inputs: Vec<InputStat>,
-}
-
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
-pub enum ShellyType {
+pub enum Shelly {
     Shelly1,
     ShellyDimmer,
     Shelly25Roller,
@@ -61,43 +50,5 @@ impl Shelly {
             }
             _ => ActionType::NotAvailable,
         }
-    }
-
-   pub fn from_announce(data: ShellyAnnounce) -> (Shelly, Vec<String>, Vec<String>) {
-        let mut shelly_type = ShellyType::Shelly1;
-
-        let mut actions = vec!["announce".to_string(), "update".to_string()];
-        let events = vec!["new_data".to_string()];
-        match data.model.as_str() {
-            "SHSW-25" => {
-                if data.mode == Some(String::from("roller")) {
-                    shelly_type = ShellyType::Shelly25Roller;
-                } else {
-                    shelly_type = ShellyType::Shelly25Switch;
-                }
-            }
-            "SHSW-1" => {
-                shelly_type = ShellyType::Shelly1;
-            }
-            "SHDM-2" => {
-                shelly_type = ShellyType::ShellyDimmer;
-                actions.push("on".to_string());
-                actions.push("off".to_string());
-            }
-            _ => {}
-        }
-
-        (
-            Shelly {
-                fw_ver: data.fw_ver,
-                shelly_type: shelly_type,
-                // update: UpdateStat::default(),
-                //meters: Vec::new(),
-                //inputs: Vec::new(),
-                //rollers: None,
-            },
-            actions,
-            events,
-        )
     }
 }

@@ -29,15 +29,18 @@ pub fn decode_announce(content: Telegram) {
                 let ip = device.ip.clone();
                 let (shelly, actions, events) = device.to_shelly();
                 let sub_device = DeviceType::Shelly(shelly);
+                let mut values=BTreeMap::new();
+                values.insert("firmware".to_string(), Value::String(device.fw_ver));
                 list.push(Device {
                     id: id,
                     ip: ip,
+                    mac: device.mac,
                     last_message: Utc::now(),
                     subdevice: sub_device,
                     available_actions: actions,
                     available_events: events,
                     rssi: 0,
-                    values: BTreeMap::new(),
+                    values: values,
                 });
             },
             (),
@@ -225,7 +228,7 @@ pub fn decode_roller(telegram: Telegram) {
             Some("stop_reason") => {
                 insert_value_in_device(
                     telegram.id,
-                    format!("roller/{}/stop_reaso", index),
+                    format!("roller/{}/stop_reason", index),
                     Value::String(telegram.payload),
                 );
             }

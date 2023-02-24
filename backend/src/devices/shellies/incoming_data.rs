@@ -1,4 +1,4 @@
-use fireplace::devices::shellies::{Shelly, ShellyType};
+use fireplace::devices::shellies::{Shelly};
 use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ShellyAnnounce {
@@ -15,22 +15,22 @@ pub struct ShellyAnnounce {
 impl ShellyAnnounce {
 
     pub fn to_shelly(&self)-> (Shelly, Vec<String>, Vec<String>){
-        let mut shelly_type = ShellyType::Shelly1;
+        let mut shelly_type = Shelly::Shelly1;
         let mut actions = vec!["announce".to_string(), "update".to_string()];
         let events = vec!["new_data".to_string()];
         match self.model.as_str() {
             "SHSW-25" => {
                 if self.mode == Some(String::from("roller")) {
-                    shelly_type = ShellyType::Shelly25Roller;
+                    shelly_type = Shelly::Shelly25Roller;
                 } else {
-                    shelly_type = ShellyType::Shelly25Switch;
+                    shelly_type = Shelly::Shelly25Switch;
                 }
             }
             "SHSW-1" => {
-                shelly_type = ShellyType::Shelly1;
+                shelly_type = Shelly::Shelly1;
             }
             "SHDM-2" => {
-                shelly_type = ShellyType::ShellyDimmer;
+                shelly_type = Shelly::ShellyDimmer;
                 actions.push("on".to_string());
                 actions.push("off".to_string());
             }
@@ -38,14 +38,7 @@ impl ShellyAnnounce {
         }
 
         (
-            Shelly {
-                fw_ver: self.fw_ver.clone(),
-                shelly_type: shelly_type,
-                // update: UpdateStat::default(),
-                //meters: Vec::new(),
-                //inputs: Vec::new(),
-                //rollers: None,
-            },
+            shelly_type,
             actions,
             events,
         )

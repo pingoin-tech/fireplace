@@ -67,7 +67,7 @@ fn app() -> Html {
           <thead>
             <tr>
               <th>{"id"}</th>
-              <th>{"ip"}</th>
+              <th>{"ip/mac"}</th>
               <th>{"RSSI"}</th>
               <th>{"sub-device"}</th>
               <th>{"actions"}</th>
