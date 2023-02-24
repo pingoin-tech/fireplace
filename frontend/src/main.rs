@@ -50,7 +50,7 @@ fn app() -> Html {
         <header>
             <div id={"header_left"}></div>
             <div id={"header_middle"}> {"Fireplace"} </div>
-            <div id={"header_right"}></div>
+            <div id={"header_right"}><img src="logo.svg" height="60"/></div>
         </header>
         <nav class={"App__nav"}>
             <ul>
