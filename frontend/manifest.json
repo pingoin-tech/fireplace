@@ -11,6 +11,7 @@
     ],
     "lang": "de-DE",
     "start_url": "./index.html",
+    "id":"./index.html",
     "display": "standalone",
     "background_color": "gray",
     "theme_color": "gray"

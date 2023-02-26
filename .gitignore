@@ -2,3 +2,4 @@
 /bindings
 /dist
 /frontent/dist
+*.pem
