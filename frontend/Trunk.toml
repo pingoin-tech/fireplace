@@ -14,4 +14,4 @@ no_autoreload = false
 [[proxy]]
 # This proxy specifies only the backend, which is the only required field. In this example,
 # request URIs are not modified when proxied.
-backend = "https://localhost:8080/api/"
+backend = "http://localhost:8080/api/"

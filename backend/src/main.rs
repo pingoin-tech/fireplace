@@ -2,7 +2,6 @@ use std::time::Duration;
 
 use actix_files as fs;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use backend::{
     devices::SENSOR_LIST,
     eventhandler::{get_event_handler, Handler, EVENT_HANDLER},
@@ -42,23 +41,13 @@ async fn main() {
             handler.init_devices().await;
         }
     }
-// load TLS keys
-    // to create a self-signed temporary cert for testing:
-    // `openssl req -x509 -newkey rsa:4096 -nodes -keyout key.pem -out cert.pem -days 365 -subj '/CN=localhost'`
-
-    let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
-    builder
-        .set_private_key_file("key.pem", SslFiletype::PEM)
-        .unwrap();
-    builder.set_certificate_chain_file("cert.pem").unwrap();
     let http_handler = HttpServer::new(|| {
         App::new()
             .service(trigger_action)
             .service(hello)
             .service(fs::Files::new("/", "./dist/").index_file("index.html"))
     })
-    .bind_openssl(("0.0.0.0", 8080),builder)
-    .unwrap()
+    .bind(("0.0.0.0", 8080)).unwrap()
     .run();
 
     let (_http, _) = tokio::join!(http_handler, event_handler_loop());
