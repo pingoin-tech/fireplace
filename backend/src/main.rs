@@ -1,11 +1,12 @@
 use std::time::Duration;
 
-use actix_files as fs;
+use actix_files;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use backend::{
-    devices::SENSOR_LIST,
+    devices::{init_sensor_list, SENSOR_LIST},
     eventhandler::{get_event_handler, Handler, EVENT_HANDLER},
     mqtt,
+    store::{init_store, STORE},
 };
 use fireplace::eventhandler::EventType;
 use rumqttc::QoS;
@@ -13,12 +14,8 @@ use tokio::{self, task, time::sleep};
 
 #[tokio::main]
 async fn main() {
-    {
-        SENSOR_LIST
-            .lock()
-            .expect("could not lock")
-            .get_or_insert(Vec::new());
-    }
+    init_store();
+    init_sensor_list();
 
     let (client, eventloop) = mqtt::init("rumqtt-async", "192.168.178.110", 1883);
 
@@ -44,22 +41,37 @@ async fn main() {
     let http_handler = HttpServer::new(|| {
         App::new()
             .service(trigger_action)
-            .service(hello)
-            .service(fs::Files::new("/", "./dist/").index_file("index.html"))
+            .service(devices)
+            .service(links)
+            .service(actix_files::Files::new("/", "./dist/").index_file("index.html"))
     })
-    .bind(("0.0.0.0", 8080)).unwrap()
+    .bind(("0.0.0.0", 8080))
+    .unwrap()
     .run();
 
     let (_http, _) = tokio::join!(http_handler, event_handler_loop());
 }
 
 #[get("/api/devices")]
-async fn hello() -> impl Responder {
+async fn devices() -> impl Responder {
     match SENSOR_LIST.lock() {
         Ok(mut list_option) => {
             if let Some(list) = list_option.as_mut() {
                 list.sort_by(|a, b| b.id.cmp(&a.id));
                 return HttpResponse::Ok().json(list);
+            }
+        }
+        Err(_) => {}
+    }
+    HttpResponse::Ok().body("bla")
+}
+
+#[get("/api/links")]
+async fn links() -> impl Responder {
+    match STORE.lock() {
+        Ok(mut store_option) => {
+            if let Some(store) = store_option.as_mut() {
+                return HttpResponse::Ok().json(&store.config.extra_links);
             }
         }
         Err(_) => {}

@@ -3,3 +3,4 @@
 /dist
 /frontent/dist
 *.pem
+setup.toml
