@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
 pub struct ConfigFile {
     pub extra_links: Vec<Link>,
+    pub mqtt_broker: Server,
+    pub http_server: Server,
 }
 
 impl Default for ConfigFile {
@@ -17,7 +19,23 @@ impl Default for ConfigFile {
                 address: "https://www.rust-lang.org/".to_string(),
             },
         ];
-        Self { extra_links: links }
+        let mqtt = Server {
+            host: "localhost".to_string(),
+            port: 1883,
+            user: None,
+            password: None,
+        };
+        let http = Server {
+            host: "0.0.0.0".to_string(),
+            port: 8080,
+            user: None,
+            password: None,
+        };
+        Self {
+            extra_links: links,
+            mqtt_broker: mqtt,
+            http_server: http,
+        }
     }
 }
 
@@ -25,4 +43,12 @@ impl Default for ConfigFile {
 pub struct Link {
     pub name: String,
     pub address: String,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, Default, PartialEq)]
+pub struct Server {
+    pub host: String,
+    pub port: u16,
+    pub user: Option<String>,
+    pub password: Option<String>,
 }

@@ -8,7 +8,7 @@ use backend::{
     mqtt,
     store::{init_store, STORE},
 };
-use fireplace::eventhandler::EventType;
+use fireplace::{config::Server, eventhandler::EventType};
 use rumqttc::QoS;
 use tokio::{self, task, time::sleep};
 
@@ -16,8 +16,19 @@ use tokio::{self, task, time::sleep};
 async fn main() {
     init_store();
     init_sensor_list();
+    let mut mqtt_broker = Server::default();
+    let mut http_server = Server::default();
+    match STORE.lock() {
+        Ok(mut store_option) => {
+            if let Some(store) = store_option.as_mut() {
+                mqtt_broker = store.config.mqtt_broker.clone();
+                http_server = store.config.http_server.clone();
+            }
+        }
+        Err(_) => {}
+    }
 
-    let (client, eventloop) = mqtt::init("rumqtt-async", "192.168.178.110", 1883);
+    let (client, eventloop) = mqtt::init("rumqtt-async", mqtt_broker.host, mqtt_broker.port);
 
     client
         .subscribe("shellies/#", QoS::AtMostOnce)
@@ -45,7 +56,7 @@ async fn main() {
             .service(links)
             .service(actix_files::Files::new("/", "./dist/").index_file("index.html"))
     })
-    .bind(("0.0.0.0", 8080))
+    .bind((http_server.host, http_server.port))
     .unwrap()
     .run();
 
