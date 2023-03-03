@@ -1,4 +1,4 @@
-use crate::devices;
+use crate::{devices, utils::open_locked_mutex_option};
 use fireplace::eventhandler::{ActionType, EventType};
 use rumqttc::{AsyncClient, QoS};
 use std::sync::Mutex;
@@ -102,13 +102,5 @@ pub fn get_event_handler<Fs, T>(found: Fs, error_val: T) -> T
 where
     Fs: FnOnce(&mut Handler) -> T,
 {
-    if let Ok(mut handler_option) = EVENT_HANDLER.lock() {
-        if let Some(handler) = handler_option.as_mut() {
-            found(handler)
-        } else {
-            error_val
-        }
-    } else {
-        error_val
-    }
+    open_locked_mutex_option(&EVENT_HANDLER, found, error_val)
 }

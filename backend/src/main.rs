@@ -7,6 +7,7 @@ use backend::{
     eventhandler::{get_event_handler, Handler, EVENT_HANDLER},
     mqtt,
     store::{init_store, STORE},
+    utils::open_locked_mutex_option,
 };
 use fireplace::{config::Server, eventhandler::EventType};
 use rumqttc::QoS;
@@ -18,15 +19,15 @@ async fn main() {
     init_sensor_list();
     let mut mqtt_broker = Server::default();
     let mut http_server = Server::default();
-    match STORE.lock() {
-        Ok(mut store_option) => {
-            if let Some(store) = store_option.as_mut() {
-                mqtt_broker = store.config.mqtt_broker.clone();
-                http_server = store.config.http_server.clone();
-            }
-        }
-        Err(_) => {}
-    }
+
+    open_locked_mutex_option(
+        &STORE,
+        |store| {
+            mqtt_broker = store.config.mqtt_broker.clone();
+            http_server = store.config.http_server.clone();
+        },
+        (),
+    );
 
     let (client, eventloop) = mqtt::init("rumqtt-async", mqtt_broker.host, mqtt_broker.port);
 
@@ -65,29 +66,23 @@ async fn main() {
 
 #[get("/api/devices")]
 async fn devices() -> impl Responder {
-    match SENSOR_LIST.lock() {
-        Ok(mut list_option) => {
-            if let Some(list) = list_option.as_mut() {
-                list.sort_by(|a, b| b.id.cmp(&a.id));
-                return HttpResponse::Ok().json(list);
-            }
-        }
-        Err(_) => {}
-    }
-    HttpResponse::Ok().body("bla")
+    open_locked_mutex_option(
+        &SENSOR_LIST,
+        |list| {
+            list.sort_by(|a, b| b.id.cmp(&a.id));
+            return HttpResponse::Ok().json(list);
+        },
+        HttpResponse::Ok().body("bla"),
+    )
 }
 
 #[get("/api/links")]
 async fn links() -> impl Responder {
-    match STORE.lock() {
-        Ok(mut store_option) => {
-            if let Some(store) = store_option.as_mut() {
-                return HttpResponse::Ok().json(&store.config.extra_links);
-            }
-        }
-        Err(_) => {}
-    }
-    HttpResponse::Ok().body("bla")
+    open_locked_mutex_option(
+        &STORE,
+        |store| HttpResponse::Ok().json(&store.config.extra_links),
+        HttpResponse::Ok().body("bla"),
+    )
 }
 
 #[post("/api/trigger-action")]
@@ -95,7 +90,6 @@ async fn trigger_action(data: web::Json<EventType>) -> impl Responder {
     println!("{:?}", &data.0);
 
     let result = get_event_handler(|handler| handler.force_action(data.0), false);
-
     if result {
         HttpResponse::Ok().body("true")
     } else {

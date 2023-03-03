@@ -5,6 +5,8 @@ use std::sync::Mutex;
 
 use fireplace::eventhandler::Value;
 
+use crate::utils::open_locked_mutex_option;
+
 type DeviceDataBase = Mutex<Option<Vec<Device>>>;
 
 pub static SENSOR_LIST: DeviceDataBase = Mutex::new(None);
@@ -21,18 +23,14 @@ where
     Fs: FnOnce(&mut Device) -> T,
     Ff: FnOnce(&mut Vec<Device>) -> T,
 {
-    if let Ok(mut list_option) = SENSOR_LIST.lock() {
-        if let Some(list) = list_option.as_mut() {
-            match list.into_iter().find(|x| x.id == id) {
-                Some(device) => found(device),
-                None => not_found(list),
-            }
-        } else {
-            error_val
-        }
-    } else {
-        error_val
-    }
+    open_locked_mutex_option(
+        &SENSOR_LIST,
+        |list| match list.into_iter().find(|x| x.id == id) {
+            Some(device) => found(device),
+            None => not_found(list),
+        },
+        error_val,
+    )
 }
 
 pub fn insert_value_in_device(id: String, key: String, val: Value) -> bool {
