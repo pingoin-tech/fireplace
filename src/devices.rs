@@ -7,8 +7,9 @@ use std::collections::BTreeMap;
 
 use super::eventhandler::{ActionType, EventType, Value};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone,Default, Debug, PartialEq)]
 pub struct Device {
+    pub alias: Option<String>,
     pub id: String,
     pub ip: String,
     pub mac:String,
@@ -25,6 +26,12 @@ pub struct Device {
 pub enum DeviceType {
     Shelly(Shelly),
     Empty,
+}
+
+impl Default for DeviceType {
+    fn default() -> Self {
+        DeviceType::Empty
+    }
 }
 
 impl Device {

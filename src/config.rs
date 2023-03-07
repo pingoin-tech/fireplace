@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
@@ -5,6 +7,7 @@ pub struct ConfigFile {
     pub extra_links: Vec<Link>,
     pub mqtt_broker: Server,
     pub http_server: Server,
+    pub device_settings: BTreeMap<String, DeviceSetup>,
 }
 
 impl Default for ConfigFile {
@@ -35,6 +38,7 @@ impl Default for ConfigFile {
             extra_links: links,
             mqtt_broker: mqtt,
             http_server: http,
+            device_settings: BTreeMap::new(),
         }
     }
 }
@@ -51,4 +55,9 @@ pub struct Server {
     pub port: u16,
     pub user: Option<String>,
     pub password: Option<String>,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, Default, PartialEq)]
+pub struct DeviceSetup {
+    pub alias: String,
 }

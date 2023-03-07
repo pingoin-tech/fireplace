@@ -58,6 +58,7 @@ async fn main() {
             .service(trigger_action)
             .service(devices)
             .service(version)
+            .service(dev_setup)
             .service(links)
             .service(actix_files::Files::new("/", "./dist/").index_file("index.html"))
     })
@@ -85,6 +86,15 @@ async fn links() -> impl Responder {
     open_locked_mutex_option(
         &STORE,
         |store| HttpResponse::Ok().json(&store.config.extra_links),
+        HttpResponse::Ok().body("bla"),
+    )
+}
+
+#[get("/api/device-setup")]
+async fn dev_setup() -> impl Responder {
+    open_locked_mutex_option(
+        &STORE,
+        |store| HttpResponse::Ok().json(&store.config.device_settings),
         HttpResponse::Ok().body("bla"),
     )
 }

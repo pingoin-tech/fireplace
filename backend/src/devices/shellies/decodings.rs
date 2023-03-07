@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use chrono::Utc;
 use serde_json::Error;
 use std::str::FromStr;
@@ -7,6 +5,8 @@ use std::str::FromStr;
 use crate::{
     devices::{get_device_from_list, insert_value_in_device, Device},
     eventhandler::get_event_handler,
+    store::STORE,
+    utils::open_locked_mutex_option,
 };
 use fireplace::devices::DeviceType;
 use fireplace::eventhandler::Value;
@@ -25,23 +25,29 @@ pub fn decode_announce(content: Telegram) {
                 dev.last_message = Utc::now();
             },
             |list| {
-                let id = device.id.clone();
-                let ip = device.ip.clone();
+                let mut dev = Device::default();
                 let (shelly, actions, events) = device.to_shelly();
-                let sub_device = DeviceType::Shelly(shelly);
-                let mut values=BTreeMap::new();
-                values.insert("firmware".to_string(), Value::String(device.fw_ver));
-                list.push(Device {
-                    id: id,
-                    ip: ip,
-                    mac: device.mac,
-                    last_message: Utc::now(),
-                    subdevice: sub_device,
-                    available_actions: actions,
-                    available_events: events,
-                    rssi: 0,
-                    values: values,
-                });
+                dev.id = device.id.clone();
+                dev.ip = device.ip.clone();
+                dev.subdevice = DeviceType::Shelly(shelly);
+                dev.values
+                    .insert("firmware".to_string(), Value::String(device.fw_ver));
+                dev.mac = device.mac;
+                dev.last_message = Utc::now();
+                dev.available_actions = actions;
+                dev.available_events = events;
+
+                open_locked_mutex_option(
+                    &STORE,
+                    |store| {
+                        if let Some(config) = store.config.device_settings.get(&dev.id) {
+                            dev.alias = Some(config.alias.clone());
+                        }
+                    },
+                    (),
+                );
+
+                list.push(dev);
             },
             (),
         ),
