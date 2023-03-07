@@ -13,13 +13,16 @@ use device_list::DeviceList;
 fn app() -> Html {
     let devices = use_state(|| vec![]);
     let links = use_state(|| vec![]);
+    let version = use_state(|| String::new());
     {
         let devices = devices.clone();
         let links = links.clone();
+        let version = version.clone();
         use_interval(
             move || {
                 let devices = devices.clone();
                 let links = links.clone();
+                let version = version.clone();
                 wasm_bindgen_futures::spawn_local({
                     get_rest("/api/devices", move |data| {
                         match serde_json::from_str(data) {
@@ -45,6 +48,9 @@ fn app() -> Html {
                         }
                     })
                 });
+                wasm_bindgen_futures::spawn_local({
+                    get_rest("/api/version", move |data| version.set(data.to_string()))
+                });
             },
             500,
         );
@@ -66,9 +72,9 @@ fn app() -> Html {
     html! {
         <>
         <header>
-            <div id={"header_left"}></div>
+            <div id={"header_left"}><img src="logo.svg" height="60"/></div>
             <div id={"header_middle"}> {"Fireplace"} </div>
-            <div id={"header_right"}><img src="logo.svg" height="60"/></div>
+            <div id={"header_right"}>{&*version}</div>
         </header>
         <nav class={"App__nav"}>
             <ul>

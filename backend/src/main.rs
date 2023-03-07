@@ -13,6 +13,9 @@ use fireplace::{config::Server, eventhandler::EventType};
 use rumqttc::QoS;
 use tokio::{self, task, time::sleep};
 
+use git_version::git_version;
+const GIT_VERSION: &str = git_version!(args = ["--always", "--tags"]);
+
 #[tokio::main]
 async fn main() {
     init_store();
@@ -54,6 +57,7 @@ async fn main() {
         App::new()
             .service(trigger_action)
             .service(devices)
+            .service(version)
             .service(links)
             .service(actix_files::Files::new("/", "./dist/").index_file("index.html"))
     })
@@ -83,6 +87,11 @@ async fn links() -> impl Responder {
         |store| HttpResponse::Ok().json(&store.config.extra_links),
         HttpResponse::Ok().body("bla"),
     )
+}
+
+#[get("/api/version")]
+async fn version() -> impl Responder {
+    HttpResponse::Ok().body(GIT_VERSION)
 }
 
 #[post("/api/trigger-action")]
