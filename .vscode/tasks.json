@@ -1,79 +1,78 @@
 {
-    "tasks": [
-      {
-        "label": "backend: serve",
-        "type": "shell",
-        "command": "cargo watch -w backend -w src -x run -c",
-        "group": "build",
-        "presentation": {
-          "reveal": "always",
-          "panel": "new"
-        },
-        "detail": "Serve Backend",
-        "options": {
-          "statusbar": {
-            "label": "$(circuit-board) serve"
-          }
-        }
+  "tasks": [
+    {
+      "label": "backend: serve",
+      "type": "shell",
+      "command": "cargo make serve-backend",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
       },
-      {
-        "label": "backend: build",
-        "type": "shell",
-        "command": "cargo build --release",
-        "group": "build",
-        "presentation": {
-          "reveal": "always",
-          "panel": "new"
-        },
-        "detail": "Build Backend",
-        "options": {
-          "statusbar": {
-            "label": "$(circuit-board) Build"
-          }
-        }
-      },
-      {
-          "label": "backend: Docs",
-          "type": "shell",
-          "command": "cargo doc --open",
-          "group": "build",
-          "presentation": {
-            "reveal": "always",
-            "panel": "new"
-          },
-          "detail": "Show Docs",
-          "options": {
-            "statusbar": {
-              "label": "$(circuit-board) Docs"
-            }
-          }
-        },
-      {
-        "label": "frontend: serve",
-        "type": "shell",
-        "command": "cd frontend && trunk serve",
-        "problemMatcher": [],
-        "detail": "Serve Frontend",
-        "options": {
-          "statusbar": {
-            "label": "$(globe) serve"
-          }
-        }
-      },
-      {
-        "type": "shell",
-        "command": "cd frontend && trunk build --release",
-        "group": "build",
-        "problemMatcher": [],
-        "label": "frontend: build",
-        "detail": "Build Frontend",
-        "options": {
-          "statusbar": {
-            "label": "$(globe) Build"
-          }
+      "detail": "Serve Backend",
+      "options": {
+        "statusbar": {
+          "label": "$(circuit-board) serve"
         }
       }
-    ],
-    "version": "2.0.0"
-  }
-  
+    },
+    {
+      "label": "backend: build",
+      "type": "shell",
+      "command": "cargo make build-backend",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "detail": "Build Backend",
+      "options": {
+        "statusbar": {
+          "label": "$(circuit-board) Build"
+        }
+      }
+    },
+    {
+      "label": "backend: Docs",
+      "type": "shell",
+      "command": "cargo doc --open",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "detail": "Show Docs",
+      "options": {
+        "statusbar": {
+          "label": "$(circuit-board) Docs"
+        }
+      }
+    },
+    {
+      "label": "frontend: serve",
+      "type": "shell",
+      "command": "cargo make serve-frontend",
+      "problemMatcher": [],
+      "detail": "Serve Frontend",
+      "options": {
+        "statusbar": {
+          "label": "$(globe) serve"
+        }
+      }
+    },
+    {
+      "type": "shell",
+      "command": "cargo make build-frontend",
+      "group": "build",
+      "problemMatcher": [],
+      "label": "frontend: build",
+      "detail": "Build Frontend",
+      "options": {
+        "statusbar": {
+          "label": "$(globe) Build"
+        }
+      }
+    }
+  ],
+  "version": "2.0.0"
+}
