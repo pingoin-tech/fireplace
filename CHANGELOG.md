@@ -1,4 +1,24 @@
 # Changelog
+## [0.1.2](https://github.com/pingoin-tech/fireplace/releases/tag/0.1.2):
+### Features:
+- show version in frontend ([ab63f63](https://github.com/pingoin-tech/fireplace/commit/ab63f6363483054ff4be2b64e6722e306028c0a6))
+- started cargo ake inclusion ([fe5dd94](https://github.com/pingoin-tech/fireplace/commit/fe5dd94e997a1c70b99726d32856001c204af011))
+- centralized open mutexes as generic function ([ab3dee4](https://github.com/pingoin-tech/fireplace/commit/ab3dee405af728df691d7f19a036b7d38688262e))
+- added servers to config file ([31d7009](https://github.com/pingoin-tech/fireplace/commit/31d700972963d1fb95a34ea332a8dca6fedbf639))
+- restyled frontend ([897b02b](https://github.com/pingoin-tech/fireplace/commit/897b02b8403be07cd0b04b01368a545e99091a30))
+- links from config file ([397c815](https://github.com/pingoin-tech/fireplace/commit/397c815c527b92680c05746637ea3240ba627207))
+## [0.1.1](https://github.com/pingoin-tech/fireplace/releases/tag/0.1.1):
+### Features:
+- removed ssl kept pwa kapabilities ([28593da](https://github.com/pingoin-tech/fireplace/commit/28593daffd17db7be0a79fbc5c24fcdafba2f63c))
+- implemented https ([dae234a](https://github.com/pingoin-tech/fireplace/commit/dae234a39fb845ba53fa816f7fdb512bde8fc11b))
+- restruct shelly device ([66924bd](https://github.com/pingoin-tech/fireplace/commit/66924bd8c14b8d93bbacd61b046669eea5502c78))
+- better PWA capabilities ([f1c4573](https://github.com/pingoin-tech/fireplace/commit/f1c45738fa1228d3dbd70fdff40b324f4ec4bf40))
+- intervalled data fetch ([7f7160c](https://github.com/pingoin-tech/fireplace/commit/7f7160c335ba59e7e88657e16fa3b59e3317f8ac))
+- moved from vue to yew as frontend still missing interval request ([d1c2be4](https://github.com/pingoin-tech/fireplace/commit/d1c2be4b2c3a3708bd3d8456e16e98f6376d03da))
+- decode input and roller ([6b488ef](https://github.com/pingoin-tech/fireplace/commit/6b488ef66c3731f079faa59906e1abc406421dac))
+- read more shelly input ([6875cb7](https://github.com/pingoin-tech/fireplace/commit/6875cb7b2579c393d67e5c91945346f980020910))
+### Organisation:
+- optimized value insert in decoders ([b066ee6](https://github.com/pingoin-tech/fireplace/commit/b066ee60a22953178ba85e140b6d8fd391adbb71))
 ## [0.1.0](https://github.com/pingoin-tech/fireplace/releases/tag/0.1.0):
 ### Features:
 - simplifying shelly decoders ([a09c410](https://github.com/pingoin-tech/fireplace/commit/a09c4100666082add9744300af1d182c8df8dc49))
