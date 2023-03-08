@@ -1,5 +1,5 @@
-pub mod mqtt;
 pub mod devices;
-pub mod store;
 pub mod eventhandler;
+pub mod mqtt;
+pub mod store;
 pub mod utils;

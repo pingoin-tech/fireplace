@@ -10,7 +10,7 @@ args = ["clean"]
 [tasks.build]
 command = "cargo"
 args = ["build", "--release"]
-dependencies = ["clean"]
+dependencies = [{ name = "clean" }, { name = "build", path = "../frontend" }]
 
 [tasks.test]
 command = "cargo"
@@ -21,3 +21,4 @@ dependencies = ["clean"]
 install_crate = "cargo-watch"
 command = "cargo"
 args = ["watch", "-w", "../src", "-w", "src", "-x", "run", "-c"]
+dependencies = [{ name = "build", path = "../frontend" }]

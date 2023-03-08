@@ -1,27 +1,22 @@
 [tasks.format]
-install_crate = "rustfmt"
-command = "cargo"
-args = ["fmt", "--", "--emit=files"]
 
 [tasks.clean]
-command = "cargo"
-args = ["clean"]
-
-[tasks.build]
-dependencies = ["build-frontend", "build-backend"]
 
 [tasks.test]
-command = "cargo"
-args = ["test"]
-dependencies = ["clean"]
 
 [tasks.serve-frontend]
+workspace = false
 dependencies = [{ name = "serve", path = "frontend" }]
 
-[tasks.build-frontend]
-dependencies = [{ name = "build", path = "frontend" }]
-
 [tasks.serve-backend]
+workspace = false
 install_crate = "cargo-watch"
 command = "cargo"
 args = ["watch", "-w", "backend", "-w", "src", "-x", "run", "-c"]
+
+[tasks.build]
+workspace = false
+dependencies = [{ name = "build", path = "frontend" }]
+install_crate = "cargo-watch"
+command = "cargo"
+args = ["build", "--release"]

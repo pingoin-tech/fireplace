@@ -7,12 +7,12 @@ use std::collections::BTreeMap;
 
 use super::eventhandler::{ActionType, EventType, Value};
 
-#[derive(Serialize, Deserialize, Clone,Default, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 pub struct Device {
     pub alias: Option<String>,
     pub id: String,
     pub ip: String,
-    pub mac:String,
+    pub mac: String,
     pub last_message: DateTime<Utc>,
     pub subdevice: DeviceType,
     pub rssi: i16,

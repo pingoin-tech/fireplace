@@ -1,7 +1,5 @@
-use self::{
-    decodings::{
-        decode_announce, decode_info, decode_other, decode_roller, decode_subdevice, decode_value,
-    }
+use self::decodings::{
+    decode_announce, decode_info, decode_other, decode_roller, decode_subdevice, decode_value,
 };
 use std::str::FromStr;
 use ts_rs::TS;

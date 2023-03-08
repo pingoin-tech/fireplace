@@ -10,7 +10,6 @@ args = ["clean"]
 [tasks.build]
 command = "trunk"
 args = ["build", "--release"]
-dependencies = ["clean"]
 
 [tasks.test]
 command = "cargo"

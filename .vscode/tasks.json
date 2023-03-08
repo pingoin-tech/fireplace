@@ -17,15 +17,15 @@
       }
     },
     {
-      "label": "backend: build",
+      "label": "build all",
       "type": "shell",
-      "command": "cargo make build-backend",
+      "command": "cargo make build",
       "group": "build",
       "presentation": {
         "reveal": "always",
         "panel": "new"
       },
-      "detail": "Build Backend",
+      "detail": "Build All",
       "options": {
         "statusbar": {
           "label": "$(circuit-board) Build"
@@ -57,19 +57,6 @@
       "options": {
         "statusbar": {
           "label": "$(globe) serve"
-        }
-      }
-    },
-    {
-      "type": "shell",
-      "command": "cargo make build-frontend",
-      "group": "build",
-      "problemMatcher": [],
-      "label": "frontend: build",
-      "detail": "Build Frontend",
-      "options": {
-        "statusbar": {
-          "label": "$(globe) Build"
         }
       }
     }

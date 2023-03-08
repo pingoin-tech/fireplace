@@ -1,4 +1,4 @@
-use fireplace::devices::shellies::{Shelly};
+use fireplace::devices::shellies::Shelly;
 use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ShellyAnnounce {
@@ -13,8 +13,7 @@ pub struct ShellyAnnounce {
 }
 
 impl ShellyAnnounce {
-
-    pub fn to_shelly(&self)-> (Shelly, Vec<String>, Vec<String>){
+    pub fn to_shelly(&self) -> (Shelly, Vec<String>, Vec<String>) {
         let mut shelly_type = Shelly::Shelly1;
         let mut actions = vec!["announce".to_string(), "update".to_string()];
         let events = vec!["new_data".to_string()];
@@ -37,14 +36,8 @@ impl ShellyAnnounce {
             _ => {}
         }
 
-        (
-            shelly_type,
-            actions,
-            events,
-        )
-
+        (shelly_type, actions, events)
     }
-    
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
