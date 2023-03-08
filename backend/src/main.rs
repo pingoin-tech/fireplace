@@ -4,10 +4,9 @@ use actix_files;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use backend::{
     devices::{init_sensor_list, SENSOR_LIST},
-    eventhandler::{get_event_handler, Handler, EVENT_HANDLER},
+    eventhandler::{Handler, EVENT_HANDLER},
     mqtt,
     store::{init_store, STORE},
-    utils::open_locked_mutex_option,
 };
 use fireplace::{config::Server, eventhandler::EventType};
 use rumqttc::QoS;
@@ -22,9 +21,7 @@ async fn main() {
     init_sensor_list();
     let mut mqtt_broker = Server::default();
     let mut http_server = Server::default();
-
-    open_locked_mutex_option(
-        &STORE,
+    STORE.open_locked(
         |store| {
             mqtt_broker = store.config.mqtt_broker.clone();
             http_server = store.config.http_server.clone();
@@ -39,20 +36,16 @@ async fn main() {
         .await
         .unwrap();
 
-    {
-        EVENT_HANDLER
-            .lock()
-            .expect("could not lock")
-            .get_or_insert(Handler::new(client).await);
-    }
+    EVENT_HANDLER.init(Handler::new(client).await);
 
     task::spawn(mqtt::work(eventloop));
 
     {
-        if let Some(handler) = EVENT_HANDLER.lock().expect("locking failed").as_mut() {
+        if let Some(handler) = EVENT_HANDLER.mutex.lock().expect("locking failed").as_mut() {
             handler.init_devices().await;
         }
     }
+
     let http_handler = HttpServer::new(|| {
         App::new()
             .service(trigger_action)
@@ -71,8 +64,7 @@ async fn main() {
 
 #[get("/api/devices")]
 async fn devices() -> impl Responder {
-    open_locked_mutex_option(
-        &SENSOR_LIST,
+    SENSOR_LIST.open_locked(
         |list| {
             list.sort_by(|a, b| b.id.cmp(&a.id));
             return HttpResponse::Ok().json(list);
@@ -83,8 +75,7 @@ async fn devices() -> impl Responder {
 
 #[get("/api/links")]
 async fn links() -> impl Responder {
-    open_locked_mutex_option(
-        &STORE,
+    STORE.open_locked(
         |store| HttpResponse::Ok().json(&store.config.extra_links),
         HttpResponse::Ok().body("bla"),
     )
@@ -92,8 +83,7 @@ async fn links() -> impl Responder {
 
 #[get("/api/device-setup")]
 async fn dev_setup() -> impl Responder {
-    open_locked_mutex_option(
-        &STORE,
+    STORE.open_locked(
         |store| HttpResponse::Ok().json(&store.config.device_settings),
         HttpResponse::Ok().body("bla"),
     )
@@ -108,7 +98,7 @@ async fn version() -> impl Responder {
 async fn trigger_action(data: web::Json<EventType>) -> impl Responder {
     println!("{:?}", &data.0);
 
-    let result = get_event_handler(|handler| handler.force_action(data.0), false);
+    let result = EVENT_HANDLER.open_locked(|handler| handler.force_action(data.0), false);
     if result {
         HttpResponse::Ok().body("true")
     } else {
@@ -118,7 +108,7 @@ async fn trigger_action(data: web::Json<EventType>) -> impl Responder {
 
 async fn event_handler_loop() {
     loop {
-        if let Some(handler) = EVENT_HANDLER.lock().expect("locking failed").as_mut() {
+        if let Some(handler) = EVENT_HANDLER.mutex.lock().expect("locking failed").as_mut() {
             handler.work().await;
         }
         sleep(Duration::from_millis(100)).await;

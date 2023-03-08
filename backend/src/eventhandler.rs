@@ -1,12 +1,9 @@
-use crate::{devices, utils::open_locked_mutex_option};
+use crate::{devices, mutex_box::MutexBox};
 use fireplace::eventhandler::{ActionType, EventType};
 use rumqttc::{AsyncClient, QoS};
-use std::sync::Mutex;
 use tokio::time::{sleep, Duration};
 
-type EventHandler = Mutex<Option<Handler>>;
-
-pub static EVENT_HANDLER: EventHandler = Mutex::new(None);
+pub static EVENT_HANDLER: MutexBox<Handler> = MutexBox::new("EventHandler");
 
 pub struct Handler {
     client: AsyncClient,
@@ -96,11 +93,4 @@ pub fn split_action_string(action_string: String) -> (Option<String>, String) {
     result.pop();
 
     (first, result)
-}
-
-pub fn get_event_handler<Fs, T>(found: Fs, error_val: T) -> T
-where
-    Fs: FnOnce(&mut Handler) -> T,
-{
-    open_locked_mutex_option(&EVENT_HANDLER, found, error_val)
 }

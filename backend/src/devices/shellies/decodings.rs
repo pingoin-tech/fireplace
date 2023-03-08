@@ -4,9 +4,8 @@ use std::str::FromStr;
 
 use crate::{
     devices::{get_device_from_list, insert_value_in_device, Device},
-    eventhandler::get_event_handler,
+    eventhandler::EVENT_HANDLER,
     store::STORE,
-    utils::open_locked_mutex_option,
 };
 use fireplace::devices::DeviceType;
 use fireplace::eventhandler::Value;
@@ -37,8 +36,7 @@ pub fn decode_announce(content: Telegram) {
                 dev.available_actions = actions;
                 dev.available_events = events;
 
-                open_locked_mutex_option(
-                    &STORE,
+                STORE.open_locked(
                     |store| {
                         if let Some(config) = store.config.device_settings.get(&dev.id) {
                             dev.alias = Some(config.alias.clone());
@@ -187,7 +185,7 @@ pub fn decode_subdevice(telegram: Telegram, subdev: &str) {
 }
 
 fn trigger_new_data(id: String) {
-    get_event_handler(
+    EVENT_HANDLER.open_locked(
         |handler| handler.trigger_event(format!("{}/new_data", id)),
         (),
     )

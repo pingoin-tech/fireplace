@@ -1,9 +1,10 @@
 use fireplace::config::ConfigFile;
-use std::{fs, sync::Mutex};
+use std::fs;
 use toml;
 
-type PublicStore = Mutex<Option<Store>>;
-pub static STORE: PublicStore = Mutex::new(None);
+use crate::mutex_box::MutexBox;
+
+pub static STORE: MutexBox<Store> = MutexBox::new("Store");
 
 const CONFIG_FILE: &str = "setup.toml";
 fn read_config() -> ConfigFile {
@@ -28,10 +29,7 @@ fn read_config() -> ConfigFile {
 pub fn init_store() {
     let config = read_config();
 
-    STORE
-        .lock()
-        .expect("could not lock")
-        .get_or_insert(Store { config: config });
+    STORE.init(Store { config: config });
 }
 
 pub struct Store {
