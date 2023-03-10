@@ -4,10 +4,12 @@ use gloo_net::http::Request;
 use wasm_bindgen::JsValue;
 use yew::prelude::*;
 use yew_hooks::prelude::*;
-mod device_list;
+pub mod components;
 mod utils;
+mod views;
+
 use crate::utils::get_rest;
-use device_list::DeviceList;
+use views::DeviceList;
 
 #[function_component(App)]
 fn app() -> Html {
@@ -84,28 +86,9 @@ fn app() -> Html {
                 {links}
             </ul>
         </nav>
-        <main>
-        <article>
-
-        <h1>{"Devices"}</h1>
-        <table>
-          <thead>
-            <tr>
-              <th>{"id"}</th>
-              <th>{"ip/mac"}</th>
-              <th>{"RSSI"}</th>
-              <th>{"sub-device"}</th>
-              <th>{"actions"}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <DeviceList devices={(*devices).clone()} on_click={action_closure}/>
-          </tbody>
-        </table>
-      </article>
-      </main>
-      <footer> {"© Pingoin-Tech"} </footer>
-      </>
+        <DeviceList devices={(*devices).clone()} on_click={action_closure}/>
+        <footer> {"© Pingoin-Tech"} </footer>
+        </>
     }
 }
 

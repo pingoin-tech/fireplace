@@ -45,6 +45,31 @@ footer {
     grid-column: 1 / -1;
 }
 
+main.dual-column {
+    >h1,
+    >h2,
+    >h3 {
+        text-align: center;
+        margin: 0;
+        padding: 1.5em;
+        border: 1px solid rgb(130, 130, 130);
+        border-radius: 0.25rem;
+        background-color: #3b3b3b;
+    }
+}
+
+.dual-column {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 0.5em;
+
+    h1,
+    h2,
+    h3 {
+        grid-column: 1 / -1;
+    }
+}
+
 header {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
