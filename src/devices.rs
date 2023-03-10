@@ -9,6 +9,7 @@ use super::eventhandler::{ActionType, EventType, Value};
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 pub struct Device {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub alias: Option<String>,
     pub id: String,
     pub ip: String,
@@ -16,7 +17,7 @@ pub struct Device {
     pub last_message: DateTime<Utc>,
     pub subdevice: DeviceType,
     pub rssi: i16,
-    pub available_actions: Vec<String>,
+    pub available_actions: Vec<EventType>,
     pub available_events: Vec<String>,
     pub values: BTreeMap<String, Value>,
 }

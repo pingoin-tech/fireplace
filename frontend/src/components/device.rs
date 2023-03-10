@@ -21,16 +21,11 @@ pub fn device_field(DeviceProps { device, on_click }: &DeviceProps) -> Html {
         .map(|action| {
             let onklick: Callback<MouseEvent> = {
                 let on_click = on_click.clone();
-                let event = EventType {
-                    id: device.id.clone(),
-                    action: action.clone(),
-                    subdevice: None,
-                    value: None,
-                };
+                let event = action.clone();
                 Callback::from(move |_ev: MouseEvent| on_click.emit(event.clone()))
             };
 
-            html!(<button onclick={onklick}>{ action }</button>)
+            html!(<button onclick={onklick}>{ action.action.clone() }</button>)
         })
         .collect();
 

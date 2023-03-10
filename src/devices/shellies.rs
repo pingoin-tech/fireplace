@@ -15,6 +15,7 @@ pub struct ShellyAnnounce {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
+#[serde(tag = "subtype", rename_all = "snake_case")]
 pub enum Shelly {
     Shelly1,
     ShellyDimmer,

@@ -16,7 +16,7 @@ pub fn device_list(DeviceListProps { devices, on_click }: &DeviceListProps) -> H
         .map(|device| html!(<DeviceField device={device.clone()} on_click={on_click}/>))
         .collect();
     html!(
-        <main class="dual-column">
+        <main class="tripple-column">
         <h2>{"all devices"}</h2>
         {dev}
         </main>

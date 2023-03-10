@@ -45,7 +45,9 @@ footer {
     grid-column: 1 / -1;
 }
 
-main.dual-column {
+main.dual-column,
+main.tripple-column {
+
     >h1,
     >h2,
     >h3 {
@@ -61,6 +63,18 @@ main.dual-column {
 .dual-column {
     display: grid;
     grid-template-columns: auto auto;
+    gap: 0.5em;
+
+    h1,
+    h2,
+    h3 {
+        grid-column: 1 / -1;
+    }
+}
+
+.tripple-column {
+    display: grid;
+    grid-template-columns: auto auto auto;
     gap: 0.5em;
 
     h1,

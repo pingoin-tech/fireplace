@@ -1,4 +1,4 @@
-use fireplace::devices::shellies::Shelly;
+use fireplace::{devices::shellies::Shelly, eventhandler::EventType};
 use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ShellyAnnounce {
@@ -13,9 +13,22 @@ pub struct ShellyAnnounce {
 }
 
 impl ShellyAnnounce {
-    pub fn to_shelly(&self) -> (Shelly, Vec<String>, Vec<String>) {
+    pub fn to_shelly(&self) -> (Shelly, Vec<EventType>, Vec<String>) {
         let mut shelly_type = Shelly::Shelly1;
-        let mut actions = vec!["announce".to_string(), "update".to_string()];
+        let mut actions = vec![
+            EventType {
+                id: self.id.clone(),
+                action: "announce".to_string(),
+                value: None,
+                subdevice: None,
+            },
+            EventType {
+                id: self.id.clone(),
+                action: "update".to_string(),
+                value: None,
+                subdevice: None,
+            },
+        ];
         let events = vec!["new_data".to_string()];
         match self.model.as_str() {
             "SHSW-25" => {
@@ -30,8 +43,18 @@ impl ShellyAnnounce {
             }
             "SHDM-2" => {
                 shelly_type = Shelly::ShellyDimmer;
-                actions.push("on".to_string());
-                actions.push("off".to_string());
+                actions.push(EventType {
+                    id: self.id.clone(),
+                    action: "on".to_string(),
+                    value: None,
+                    subdevice: None,
+                });
+                actions.push(EventType {
+                    id: self.id.clone(),
+                    action: "off".to_string(),
+                    value: None,
+                    subdevice: None,
+                });
             }
             _ => {}
         }
