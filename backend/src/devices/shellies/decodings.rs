@@ -66,12 +66,12 @@ pub fn decode_info(telegram: Telegram) {
                             if let Some(relays) = info_data.relays {
                                 for (pos, relay) in relays.iter().enumerate() {
                                     device.values.insert(
-                                        format!("{}/{}/on", "relay", pos),
+                                        create_val_key("relay", pos),
                                         Value::Bool(relay.ison),
                                     );
                                     if let Some(overpower) = relay.overpower {
                                         device.values.insert(
-                                            format!("{}/{}/overpower", "relay", pos),
+                                            create_val_key("relay-overpower", pos),
                                             Value::Bool(overpower),
                                         );
                                     }
@@ -80,11 +80,11 @@ pub fn decode_info(telegram: Telegram) {
                             if let Some(lights) = info_data.lights {
                                 for (pos, light) in lights.iter().enumerate() {
                                     device.values.insert(
-                                        format!("{}/{}/on", "light", pos),
+                                        create_val_key("light-on", pos),
                                         Value::Bool(light.ison),
                                     );
                                     device.values.insert(
-                                        format!("{}/{}/brightness", "light", pos),
+                                        create_val_key("brightness", pos),
                                         Value::Number(light.brightness as f32),
                                     );
                                 }
@@ -153,7 +153,7 @@ pub fn decode_subdevice(telegram: Telegram, subdev: &str) {
                 if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
                     insert_value_in_device(
                         telegram.id.clone(),
-                        format!("{}/{}/power", subdev, index),
+                        create_val_key((subdev.to_string() + "-power").as_str(), index),
                         Value::Number(val),
                     );
                 }
@@ -162,7 +162,7 @@ pub fn decode_subdevice(telegram: Telegram, subdev: &str) {
                 if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
                     insert_value_in_device(
                         telegram.id.clone(),
-                        format!("{}/{}/energy", subdev, index),
+                        create_val_key((subdev.to_string() + "-energy").as_str(), index),
                         Value::Number(val),
                     );
                 }
@@ -175,7 +175,7 @@ pub fn decode_subdevice(telegram: Telegram, subdev: &str) {
                 }
                 insert_value_in_device(
                     telegram.id.clone(),
-                    format!("{}/{}/on", subdev, index),
+                    create_val_key((subdev.to_string() + "-on").as_str(), index),
                     Value::Bool(on),
                 );
             }
@@ -198,7 +198,7 @@ pub fn decode_roller(telegram: Telegram) {
             None => {
                 insert_value_in_device(
                     telegram.id,
-                    format!("roller/{}/status", index),
+                    create_val_key("roller-status", index),
                     Value::String(telegram.payload),
                 );
             }
@@ -206,7 +206,7 @@ pub fn decode_roller(telegram: Telegram) {
                 if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
                     insert_value_in_device(
                         telegram.id,
-                        format!("roller/{}/position", index),
+                        create_val_key("roller-position", index),
                         Value::Number(val),
                     );
                 }
@@ -215,7 +215,7 @@ pub fn decode_roller(telegram: Telegram) {
                 if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
                     insert_value_in_device(
                         telegram.id,
-                        format!("roller/{}/energy", index),
+                        create_val_key("roller-energy", index),
                         Value::Number(val),
                     );
                 }
@@ -224,7 +224,7 @@ pub fn decode_roller(telegram: Telegram) {
                 if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
                     insert_value_in_device(
                         telegram.id,
-                        format!("roller/{}/power", index),
+                        create_val_key("roller-power", index),
                         Value::Number(val),
                     );
                 }
@@ -232,12 +232,20 @@ pub fn decode_roller(telegram: Telegram) {
             Some("stop_reason") => {
                 insert_value_in_device(
                     telegram.id,
-                    format!("roller/{}/stop_reason", index),
+                    create_val_key("roller-stop-reason", index),
                     Value::String(telegram.payload),
                 );
             }
             _ => {}
         }
         trigger_new_data(id);
+    }
+}
+
+fn create_val_key(name: &str, pos: usize) -> String {
+    if pos == 0 {
+        name.to_string()
+    } else {
+        format!("{}-{}", name, pos)
     }
 }

@@ -6,6 +6,7 @@ use rumqttc::{
     EventLoop, MqttOptions, Packet,
 };
 use std::time::Duration;
+use tokio::task;
 
 pub fn init<S, T>(id: S, host: T, port: u16) -> (AsyncClient, EventLoop)
 where
@@ -25,7 +26,7 @@ pub async fn work(mut eventloop: EventLoop) {
         match notification {
             Incoming(pack) => match pack {
                 Packet::Publish(content) => {
-                    decode_subsciptions(content).await;
+                    task::spawn(decode_subsciptions(content));
                 }
                 _ => {}
             },

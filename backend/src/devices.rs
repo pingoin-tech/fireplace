@@ -5,7 +5,7 @@ use fireplace::eventhandler::Value;
 
 use crate::mutex_box::MutexBox;
 
-pub static SENSOR_LIST: MutexBox<Vec<Device>> = MutexBox::new("EventHandler");
+pub static SENSOR_LIST: MutexBox<Vec<Device>> = MutexBox::new("SensorList");
 
 pub fn init_sensor_list() {
     SENSOR_LIST.init(Vec::new());

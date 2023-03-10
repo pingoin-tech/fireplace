@@ -36,7 +36,7 @@ impl<T> MutexBox<T> {
     pub fn init(&self, data: T) {
         self.mutex
             .lock()
-            .expect("could not lock")
+            .expect(format!("could not lock {}", self.name).as_str())
             .get_or_insert(data);
     }
 }
