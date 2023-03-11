@@ -90,9 +90,14 @@ pub fn decode_info(telegram: Telegram) {
                                 }
                             }
 
+                            let seconds = info_data.uptime % 60;
+                            let minutes = (info_data.uptime / 60) % 60;
+                            let hours = (info_data.uptime / 60) / 60%24;
+                            let days=(info_data.uptime / 60) / 60/24;
+
                             device.values.insert(
                                 "uptime".to_string(),
-                                Value::Number(info_data.uptime as f32),
+                                Value::String(format!("{}d{}h{}min{}s",days, hours, minutes, seconds)),
                             );
                             if let Some(op) = info_data.overpower {
                                 device
