@@ -1,22 +1,40 @@
-use gloo_console::log;
 use gloo_net::http::Request;
-use wasm_bindgen::JsValue;
 
-pub async fn get_rest<F>(path: &str, function: F)
+use crate::Msg;
+
+pub async fn fetch<Fn>(path: &str, fun: Fn) -> Option<Msg>
 where
-    F: FnOnce(&str),
+    Fn: FnOnce(String) -> Option<Msg>,
 {
-    match Request::get(path).send().await {
-        Ok(result) => match result.text().await {
-            Ok(text) => {
-                function(text.as_str());
-            }
-            Err(err) => {
-                log!("Error at decode", JsValue::from(err.to_string()));
-            }
-        },
-        Err(err) => {
-            log!("Error at fetch", JsValue::from(err.to_string()));
+    if let Ok(response) = Request::get(path).send().await {
+        if !response.ok() {
+            None
+        } else {
+            let response = response.text().await.expect("Decode");
+            fun(response)
         }
+    } else {
+        None
+    }
+}
+
+pub async fn post<Fn, T>(path: &str, data: T, fun: Fn) -> Option<Msg>
+where
+    Fn: FnOnce(String) -> Option<Msg>,
+    T: serde::Serialize,
+{
+    if let Ok(request) = Request::post(path).json(&data) {
+        if let Ok(response) = request.send().await {
+            if !response.ok() {
+                None
+            } else {
+                let response = response.text().await.expect("Decode");
+                fun(response)
+            }
+        } else {
+            None
+        }
+    } else {
+        None
     }
 }

@@ -1,24 +1,13 @@
-use fireplace::{devices::Device, eventhandler::EventType};
-use yew::prelude::*;
+use seed::{prelude::*, *};
 
-use crate::components::DeviceField;
+use crate::{components::device_field, Model, Msg};
 
-#[derive(Properties, PartialEq)]
-pub struct DeviceListProps {
-    pub devices: Vec<Device>,
-    pub on_click: Callback<EventType>,
-}
+pub fn device_list(model: &Model) -> Node<Msg> {
+    let mut devices: Vec<Node<Msg>> = Vec::new();
 
-#[function_component(DeviceList)]
-pub fn device_list(DeviceListProps { devices, on_click }: &DeviceListProps) -> Html {
-    let dev: Html = devices
-        .iter()
-        .map(|device| html!(<DeviceField device={device.clone()} on_click={on_click}/>))
-        .collect();
-    html!(
-        <main class="tripple-column">
-        <h2>{"all devices"}</h2>
-        {dev}
-        </main>
-    )
+    for device in &model.devices {
+        devices.push(device_field(device));
+    }
+
+    main![C!["tripple-column"], h2!("all devices"), devices]
 }
