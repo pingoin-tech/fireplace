@@ -1,4 +1,4 @@
-use chrono::Utc;
+use chrono::{DateTime, Duration, Utc};
 use serde_json::Error;
 use std::str::FromStr;
 
@@ -7,8 +7,8 @@ use crate::{
     eventhandler::EVENT_HANDLER,
     store::STORE,
 };
-use fireplace::devices::DeviceType;
 use fireplace::eventhandler::Value;
+use fireplace::{devices::DeviceType, eventhandler::EventType};
 
 use super::{
     incoming_data::{ShellyAnnounce, ShellyInfo},
@@ -33,6 +33,7 @@ pub fn decode_announce(content: Telegram) {
                     .insert("firmware".to_string(), Value::String(device.fw_ver));
                 dev.mac = device.mac;
                 dev.last_message = Utc::now();
+                dev.last_data = Utc::now();
                 dev.available_actions = actions;
                 dev.available_events = events;
 
@@ -92,12 +93,15 @@ pub fn decode_info(telegram: Telegram) {
 
                             let seconds = info_data.uptime % 60;
                             let minutes = (info_data.uptime / 60) % 60;
-                            let hours = (info_data.uptime / 60) / 60%24;
-                            let days=(info_data.uptime / 60) / 60/24;
+                            let hours = (info_data.uptime / 60) / 60 % 24;
+                            let days = (info_data.uptime / 60) / 60 / 24;
 
                             device.values.insert(
                                 "uptime".to_string(),
-                                Value::String(format!("{}d{}h{}min{}s",days, hours, minutes, seconds)),
+                                Value::String(format!(
+                                    "{}d{}h{}min{}s",
+                                    days, hours, minutes, seconds
+                                )),
                             );
                             if let Some(op) = info_data.overpower {
                                 device
@@ -152,11 +156,12 @@ pub fn decode_value(telegram: Telegram, value: &str) {
 }
 
 pub fn decode_subdevice(telegram: Telegram, subdev: &str) {
+    let mut old_data_time = (false, Utc::now());
     if let Some(index) = telegram.subdevice_number {
         match telegram.subdevice.as_deref() {
             Some("power") => {
                 if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
-                    insert_value_in_device(
+                    old_data_time = insert_value_in_device(
                         telegram.id.clone(),
                         create_val_key((subdev.to_string() + "-power").as_str(), index),
                         Value::Number(val),
@@ -165,7 +170,7 @@ pub fn decode_subdevice(telegram: Telegram, subdev: &str) {
             }
             Some("energy") => {
                 if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
-                    insert_value_in_device(
+                    old_data_time = insert_value_in_device(
                         telegram.id.clone(),
                         create_val_key((subdev.to_string() + "-energy").as_str(), index),
                         Value::Number(val),
@@ -178,7 +183,7 @@ pub fn decode_subdevice(telegram: Telegram, subdev: &str) {
                 if telegram.payload.as_str() == "on" {
                     on = true;
                 }
-                insert_value_in_device(
+                old_data_time = insert_value_in_device(
                     telegram.id.clone(),
                     create_val_key((subdev.to_string() + "-on").as_str(), index),
                     Value::Bool(on),
@@ -186,22 +191,30 @@ pub fn decode_subdevice(telegram: Telegram, subdev: &str) {
             }
         }
     }
-    trigger_new_data(telegram.id)
+    trigger_new_data(telegram.id, old_data_time.1)
 }
 
-fn trigger_new_data(id: String) {
-    EVENT_HANDLER.open_locked(
-        |handler| handler.trigger_event(format!("{}/new_data", id)),
-        (),
-    )
+fn trigger_new_data(id: String, old_time: DateTime<Utc>) {
+    let event = EventType {
+        id,
+        action: "new_data".to_string(),
+        value: None,
+        subdevice: None,
+    };
+
+    let diff = Utc::now() - old_time;
+    if diff > Duration::seconds(1) {
+        EVENT_HANDLER.open_locked(|handler| handler.trigger_event(event), ())
+    }
 }
 
 pub fn decode_roller(telegram: Telegram) {
+    let mut old_data_time = (false, Utc::now());
     if let Some(index) = telegram.subdevice_number {
         let id = telegram.id.clone();
         match telegram.subdevice.as_deref() {
             None => {
-                insert_value_in_device(
+                old_data_time = insert_value_in_device(
                     telegram.id,
                     create_val_key("roller-status", index),
                     Value::String(telegram.payload),
@@ -209,7 +222,7 @@ pub fn decode_roller(telegram: Telegram) {
             }
             Some("pos") => {
                 if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
-                    insert_value_in_device(
+                    old_data_time = insert_value_in_device(
                         telegram.id,
                         create_val_key("roller-position", index),
                         Value::Number(val),
@@ -218,7 +231,7 @@ pub fn decode_roller(telegram: Telegram) {
             }
             Some("energy") => {
                 if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
-                    insert_value_in_device(
+                    old_data_time = insert_value_in_device(
                         telegram.id,
                         create_val_key("roller-energy", index),
                         Value::Number(val),
@@ -227,7 +240,7 @@ pub fn decode_roller(telegram: Telegram) {
             }
             Some("power") => {
                 if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
-                    insert_value_in_device(
+                    old_data_time = insert_value_in_device(
                         telegram.id,
                         create_val_key("roller-power", index),
                         Value::Number(val),
@@ -235,7 +248,7 @@ pub fn decode_roller(telegram: Telegram) {
                 }
             }
             Some("stop_reason") => {
-                insert_value_in_device(
+                old_data_time = insert_value_in_device(
                     telegram.id,
                     create_val_key("roller-stop-reason", index),
                     Value::String(telegram.payload),
@@ -243,7 +256,7 @@ pub fn decode_roller(telegram: Telegram) {
             }
             _ => {}
         }
-        trigger_new_data(id);
+        trigger_new_data(id, old_data_time.1);
     }
 }
 

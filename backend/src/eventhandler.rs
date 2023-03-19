@@ -1,5 +1,6 @@
 use crate::{devices, mutex_box::MutexBox};
-use fireplace::eventhandler::{ActionType, EventType};
+use chrono::Utc;
+use fireplace::eventhandler::{ActionType, EventType, TimedEvent};
 use rumqttc::{AsyncClient, QoS};
 use tokio::time::{sleep, Duration};
 
@@ -7,8 +8,10 @@ pub static EVENT_HANDLER: MutexBox<Handler> = MutexBox::new("EventHandler");
 
 pub struct Handler {
     client: AsyncClient,
-    event_buffer: Vec<String>,
+    event_buffer: Vec<EventType>,
     action_buffer: Vec<ActionType>,
+    pub last_events: Vec<TimedEvent>,
+    pub last_actions: Vec<TimedEvent>,
 }
 
 impl Handler {
@@ -17,6 +20,8 @@ impl Handler {
             client: client,
             event_buffer: Vec::new(),
             action_buffer: Vec::new(),
+            last_actions: Vec::new(),
+            last_events: Vec::new(),
         };
         return handle;
     }
@@ -35,11 +40,21 @@ impl Handler {
         });
     }
 
-    pub fn trigger_event(&mut self, event_string: String) {
-        self.event_buffer.push(event_string);
+    pub fn trigger_event(&mut self, event: EventType) {
+        self.last_events.push(TimedEvent {
+            event: event.clone(),
+            timestamp: Utc::now(),
+        });
+
+        self.event_buffer.push(event);
     }
 
     pub fn force_action(&mut self, action_triggered: EventType) -> bool {
+        self.last_actions.push(TimedEvent {
+            timestamp: Utc::now(),
+            event: action_triggered.clone(),
+        });
+
         let action = devices::get_device_from_list(
             action_triggered.id.clone(),
             |device| device.trigger_action(action_triggered),
@@ -77,6 +92,14 @@ impl Handler {
     }
 
     pub async fn work(&mut self) {
+        let now = Utc::now();
+        self.last_events.retain(|event| {
+            let result = now - event.timestamp <= chrono::Duration::seconds(20);
+            result
+        });
+        self.last_actions
+            .retain(|event| now - event.timestamp <= chrono::Duration::seconds(20));
+
         self.event_buffer.pop();
         self.work_action().await;
     }

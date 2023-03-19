@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use fireplace::devices::Device;
 pub mod shellies;
 
@@ -25,14 +26,16 @@ where
     )
 }
 
-pub fn insert_value_in_device(id: String, key: String, val: Value) -> bool {
+pub fn insert_value_in_device(id: String, key: String, val: Value) -> (bool, DateTime<Utc>) {
     get_device_from_list(
         id,
         |device| {
+            let old_time = device.last_data.clone();
+            device.last_data = Utc::now();
             device.values.insert(key, val);
-            true
+            (true, old_time)
         },
-        |_| false,
-        false,
+        |_| (false, Utc::now()),
+        (false, Utc::now()),
     )
 }

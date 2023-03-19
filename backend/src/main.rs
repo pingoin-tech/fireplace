@@ -52,6 +52,8 @@ async fn main() {
             .service(devices)
             .service(version)
             .service(dev_setup)
+            .service(last_actions)
+            .service(last_events)
             .service(links)
             .service(actix_files::Files::new("/", "./dist/").index_file("index.html"))
     })
@@ -85,6 +87,22 @@ async fn links() -> impl Responder {
 async fn dev_setup() -> impl Responder {
     STORE.open_locked(
         |store| HttpResponse::Ok().json(&store.config.device_settings),
+        HttpResponse::Ok().body("bla"),
+    )
+}
+
+#[get("/api/last-events")]
+async fn last_events() -> impl Responder {
+    EVENT_HANDLER.open_locked(
+        |handler| HttpResponse::Ok().json(&handler.last_events),
+        HttpResponse::Ok().body("bla"),
+    )
+}
+
+#[get("/api/last-actions")]
+async fn last_actions() -> impl Responder {
+    EVENT_HANDLER.open_locked(
+        |handler| HttpResponse::Ok().json(&handler.last_actions),
         HttpResponse::Ok().body("bla"),
     )
 }

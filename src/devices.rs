@@ -15,6 +15,7 @@ pub struct Device {
     pub ip: String,
     pub mac: String,
     pub last_message: DateTime<Utc>,
+    pub last_data: DateTime<Utc>,
     pub subdevice: DeviceType,
     pub rssi: i16,
     pub available_actions: Vec<EventType>,

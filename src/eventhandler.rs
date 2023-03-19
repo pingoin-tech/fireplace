@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display};
 
@@ -39,4 +40,10 @@ pub struct EventType {
 pub enum ActionType {
     NotAvailable,
     MqttAction(String, String),
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct TimedEvent {
+    pub timestamp: DateTime<Utc>,
+    pub event: EventType,
 }

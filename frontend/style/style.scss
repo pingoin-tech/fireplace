@@ -24,7 +24,7 @@ body {
 
     /* Breite beträgt mindestens 45em */
     body {
-        grid-template-columns: 1fr 4fr;
+        grid-template-columns: 12em 4fr;
         grid-template-rows: auto 1fr 100px;
     }
 }
