@@ -5,7 +5,7 @@ use shellies::Shelly;
 
 use std::collections::BTreeMap;
 
-use super::eventhandler::{ActionType, EventType, Value};
+use super::eventhandler::{ActionType, Event, Value};
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 pub struct Device {
@@ -18,8 +18,8 @@ pub struct Device {
     pub last_data: DateTime<Utc>,
     pub subdevice: DeviceType,
     pub rssi: i16,
-    pub available_actions: Vec<EventType>,
-    pub available_events: Vec<String>,
+    pub available_actions: Vec<Event>,
+    pub available_events: Vec<Event>,
     pub values: BTreeMap<String, Value>,
 }
 
@@ -37,7 +37,7 @@ impl Default for DeviceType {
 }
 
 impl Device {
-    pub fn trigger_action(&mut self, action: EventType) -> ActionType {
+    pub fn trigger_action(&mut self, action: Event) -> ActionType {
         match &mut self.subdevice {
             DeviceType::Shelly(device) => device.trigger_action(action),
             DeviceType::Empty => ActionType::NotAvailable,

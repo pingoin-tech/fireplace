@@ -8,7 +8,7 @@ use backend::{
     mqtt,
     store::{init_store, STORE},
 };
-use fireplace::{config::Server, eventhandler::EventType};
+use fireplace::{config::Server, eventhandler::Event};
 use rumqttc::QoS;
 use tokio::{self, task, time::sleep};
 
@@ -113,7 +113,7 @@ async fn version() -> impl Responder {
 }
 
 #[post("/api/trigger-action")]
-async fn trigger_action(data: web::Json<EventType>) -> impl Responder {
+async fn trigger_action(data: web::Json<Event>) -> impl Responder {
     println!("{:?}", &data.0);
 
     let result = EVENT_HANDLER.open_locked(|handler| handler.force_action(data.0), false);

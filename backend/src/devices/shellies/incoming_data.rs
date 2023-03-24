@@ -1,4 +1,4 @@
-use fireplace::{devices::shellies::Shelly, eventhandler::EventType};
+use fireplace::{devices::shellies::Shelly, eventhandler::{Event, EventName}};
 use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ShellyAnnounce {
@@ -13,23 +13,23 @@ pub struct ShellyAnnounce {
 }
 
 impl ShellyAnnounce {
-    pub fn to_shelly(&self) -> (Shelly, Vec<EventType>, Vec<String>) {
+    pub fn to_shelly(&self) -> (Shelly, Vec<Event>, Vec<Event>) {
         let mut shelly_type = Shelly::Shelly1;
         let mut actions = vec![
-            EventType {
+            Event {
                 id: self.id.clone(),
-                action: "announce".to_string(),
+                event: EventName::Announce,
                 value: None,
                 subdevice: None,
             },
-            EventType {
+            Event {
                 id: self.id.clone(),
-                action: "update".to_string(),
+                event:EventName::Update,
                 value: None,
                 subdevice: None,
             },
         ];
-        let events = vec!["new_data".to_string()];
+        let events = vec![Event { id:self.id.clone(), event: EventName::NewData, value: None, subdevice:None }];
         match self.model.as_str() {
             "SHSW-25" => {
                 if self.mode == Some(String::from("roller")) {
@@ -43,15 +43,15 @@ impl ShellyAnnounce {
             }
             "SHDM-2" => {
                 shelly_type = Shelly::ShellyDimmer;
-                actions.push(EventType {
+                actions.push(Event{
                     id: self.id.clone(),
-                    action: "on".to_string(),
+                    event:EventName::On,
                     value: None,
                     subdevice: None,
                 });
-                actions.push(EventType {
+                actions.push(Event {
                     id: self.id.clone(),
-                    action: "off".to_string(),
+                    event:EventName::Off,
                     value: None,
                     subdevice: None,
                 });

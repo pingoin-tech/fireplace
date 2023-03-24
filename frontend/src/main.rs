@@ -1,5 +1,5 @@
 //! The simplest fetch example.
-use fireplace::{config::Link, devices::Device, eventhandler::EventType};
+use fireplace::{config::Link, devices::Device, eventhandler::Event};
 use seed::prelude::*;
 use serde_json;
 mod components;
@@ -42,7 +42,7 @@ pub enum Msg {
     ReceivedVersion(String),
     ReceivedDevices(Vec<Device>),
     ReceivedLinks(Vec<Link>),
-    TriggerAction(EventType),
+    TriggerAction(Event),
 }
 
 pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {

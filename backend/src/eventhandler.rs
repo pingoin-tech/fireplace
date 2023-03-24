@@ -1,6 +1,6 @@
 use crate::{devices, mutex_box::MutexBox};
 use chrono::Utc;
-use fireplace::eventhandler::{ActionType, EventType, TimedEvent};
+use fireplace::eventhandler::{ActionType, Event, TimedEvent, EventName};
 use rumqttc::{AsyncClient, QoS};
 use tokio::time::{sleep, Duration};
 
@@ -8,7 +8,7 @@ pub static EVENT_HANDLER: MutexBox<Handler> = MutexBox::new("EventHandler");
 
 pub struct Handler {
     client: AsyncClient,
-    event_buffer: Vec<EventType>,
+    event_buffer: Vec<Event>,
     action_buffer: Vec<ActionType>,
     pub last_events: Vec<TimedEvent>,
     pub last_actions: Vec<TimedEvent>,
@@ -32,15 +32,15 @@ impl Handler {
             .await
             .unwrap();
         sleep(Duration::from_millis(1000)).await;
-        self.force_action(EventType {
+        self.force_action(Event {
             id: "schlafenEltern-lichtSchalter".to_string(),
-            action: "announce".to_string(),
+            event:EventName::Announce,
             value: None,
             subdevice: None,
         });
     }
 
-    pub fn trigger_event(&mut self, event: EventType) {
+    pub fn trigger_event(&mut self, event: Event) {
         self.last_events.push(TimedEvent {
             event: event.clone(),
             timestamp: Utc::now(),
@@ -49,7 +49,7 @@ impl Handler {
         self.event_buffer.push(event);
     }
 
-    pub fn force_action(&mut self, action_triggered: EventType) -> bool {
+    pub fn force_action(&mut self, action_triggered: Event) -> bool {
         self.last_actions.push(TimedEvent {
             timestamp: Utc::now(),
             event: action_triggered.clone(),

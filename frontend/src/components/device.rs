@@ -1,4 +1,4 @@
-use fireplace::{devices::Device, eventhandler::EventType};
+use fireplace::{devices::Device};
 use seed::{prelude::*, *};
 
 use crate::Msg;
@@ -13,15 +13,10 @@ pub fn device_field(device: &Device) -> Node<Msg> {
     let mut actions: Vec<Node<Msg>> = Vec::new();
 
     for action in &device.available_actions {
-        let event = EventType {
-            id: action.id.clone(),
-            action: action.action.clone(),
-            value: action.value.clone(),
-            subdevice: action.subdevice.clone(),
-        };
+        let event = action.clone();
         actions.push(button!(
             ev(Ev::Click, |_| Msg::TriggerAction(event)),
-            &action.action
+            &action.event.to_string()
         ));
     }
 

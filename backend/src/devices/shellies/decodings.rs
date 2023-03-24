@@ -7,8 +7,8 @@ use crate::{
     eventhandler::EVENT_HANDLER,
     store::STORE,
 };
-use fireplace::eventhandler::Value;
-use fireplace::{devices::DeviceType, eventhandler::EventType};
+use fireplace::eventhandler::{Value, EventName};
+use fireplace::{devices::DeviceType, eventhandler::Event};
 
 use super::{
     incoming_data::{ShellyAnnounce, ShellyInfo},
@@ -195,9 +195,9 @@ pub fn decode_subdevice(telegram: Telegram, subdev: &str) {
 }
 
 fn trigger_new_data(id: String, old_time: DateTime<Utc>) {
-    let event = EventType {
+    let event = Event {
         id,
-        action: "new_data".to_string(),
+        event:EventName::NewData,
         value: None,
         subdevice: None,
     };

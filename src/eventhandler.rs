@@ -27,13 +27,33 @@ impl Display for Value {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct EventType {
+pub struct Event {
+    ///ID of the device
     pub id: String,
-    pub action: String,
+    pub event: EventName,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub value: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subdevice: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(tag = "event", rename_all = "snake_case")]
+pub enum EventName {
+    NewData,
+    InputShort,
+    InputLong,
+    On,
+    Off,
+    Toggle,
+    Update,
+    Announce,
+}
+
+impl fmt::Display for EventName {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 #[derive(PartialEq, Clone)]
@@ -45,5 +65,5 @@ pub enum ActionType {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct TimedEvent {
     pub timestamp: DateTime<Utc>,
-    pub event: EventType,
+    pub event: Event,
 }

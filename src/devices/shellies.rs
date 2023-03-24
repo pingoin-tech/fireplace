@@ -1,4 +1,4 @@
-use crate::eventhandler::{ActionType, EventType};
+use crate::eventhandler::{ActionType, Event, EventName};
 
 use serde::{Deserialize, Serialize};
 
@@ -32,21 +32,21 @@ pub struct Telegram {
 }
 
 impl Shelly {
-    pub fn trigger_action(&mut self, action: EventType) -> ActionType {
+    pub fn trigger_action(&mut self, action: Event) -> ActionType {
         let base_path = format!("shellies/{}/", action.id);
-        println!("{}", action.action.clone());
+        println!("{:?}", action.event.clone());
 
-        match action.action.as_str() {
-            "announce" => {
+        match action.event {
+            EventName::Announce => {
                 ActionType::MqttAction(format!("{}command", base_path), String::from("announce"))
             }
-            "update" => {
+            EventName::Update=> {
                 ActionType::MqttAction(format!("{}command", base_path), String::from("update"))
             }
-            "on" => {
+            EventName::On => {
                 ActionType::MqttAction(format!("{}light/0/command", base_path), String::from("on"))
             }
-            "off" => {
+            EventName::Off=> {
                 ActionType::MqttAction(format!("{}light/0/command", base_path), String::from("off"))
             }
             _ => ActionType::NotAvailable,
