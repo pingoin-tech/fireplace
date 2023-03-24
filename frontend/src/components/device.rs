@@ -20,22 +20,6 @@ pub fn device_field(device: &Device) -> Node<Msg> {
         ));
     }
 
-    /*
-        device
-            .available_actions
-            .iter()
-            .map(|action| {
-                let onklick: Callback<MouseEvent> = {
-                    let on_click = on_click.clone();
-                    let event = action.clone();
-                    Callback::from(move |_ev: MouseEvent| on_click.emit(event.clone()))
-                };
-
-                html!(<button onclick={onklick}>{ action.action.clone() }</button>)
-            })
-            .collect();
-
-    */
     let mut values: Vec<Node<Msg>> = Vec::new();
 
     for value in &device.values {

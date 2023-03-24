@@ -1,6 +1,6 @@
 use seed::{prelude::*, *};
 
-use crate::{Model, Msg};
+use crate::{router::Page, Model, Msg};
 
 pub fn view_head(model: &Model) -> Node<Msg> {
     header![
@@ -25,6 +25,16 @@ pub fn view_nav(model: &Model) -> Node<Msg> {
             C!["router-link-active", "router-link-exact-active"],
             attrs!(At::Href=>"/"),
             "Home"
+        ]),
+        li!(a![
+            C!["router-link-active", "router-link-exact-active"],
+            ev(Ev::Click, |_| Msg::SetView(Page::DeviceList)),
+            "Device List"
+        ]),
+        li!(a![
+            C!["router-link-active", "router-link-exact-active"],
+            ev(Ev::Click, |_| Msg::SetView(Page::LastAction)),
+            "Last Events"
         ]),
         links
     ]]

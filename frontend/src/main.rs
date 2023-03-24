@@ -1,14 +1,20 @@
 //! The simplest fetch example.
-use fireplace::{config::Link, devices::Device, eventhandler::Event};
+use fireplace::{
+    config::Link,
+    devices::Device,
+    eventhandler::{Event, TimedEvent},
+};
 use seed::prelude::*;
 use serde_json;
 mod components;
+mod router;
 mod utils;
 mod views;
 
 use components::{view_foot, view_head, view_nav};
+use router::Page;
 
-use crate::{utils::post, views::device_list};
+use crate::{router::route_view, utils::post};
 use utils::fetch;
 
 // ------ ------
@@ -20,6 +26,9 @@ pub struct Model {
     pub version: Option<String>,
     pub devices: Vec<Device>,
     pub links: Vec<Link>,
+    pub last_events: Vec<TimedEvent>,
+    pub route: Option<Page>,
+    pub last_actions: Vec<TimedEvent>,
 }
 
 // ------ ------
@@ -39,9 +48,12 @@ fn init(_: Url, orders: &mut impl Orders<Msg>) -> Model {
 
 pub enum Msg {
     Fetch,
+    SetView(Page),
     ReceivedVersion(String),
     ReceivedDevices(Vec<Device>),
     ReceivedLinks(Vec<Link>),
+    ReceivedLastActions(Vec<TimedEvent>),
+    ReceivedLastEvents(Vec<TimedEvent>),
     TriggerAction(Event),
 }
 
@@ -66,6 +78,20 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     } else {
                         None
                     }
+                }))
+                .perform_cmd(fetch("/api/last_actions", |response| {
+                    if let Ok(actions) = serde_json::from_str(&response) {
+                        Some(Msg::ReceivedLastActions(actions))
+                    } else {
+                        None
+                    }
+                }))
+                .perform_cmd(fetch("/api/last-events", |response| {
+                    if let Ok(events) = serde_json::from_str(&response) {
+                        Some(Msg::ReceivedLastEvents(events))
+                    } else {
+                        None
+                    }
                 }));
         }
         Msg::ReceivedVersion(user) => {
@@ -76,6 +102,15 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::ReceivedLinks(links) => {
             model.links = links;
+        }
+        Msg::ReceivedLastActions(actions) => {
+            model.last_actions = actions;
+        }
+        Msg::ReceivedLastEvents(events) => {
+            model.last_events = events;
+        }
+        Msg::SetView(page) => {
+            model.route = Some(page);
         }
         Msg::TriggerAction(event) => {
             orders
@@ -93,7 +128,7 @@ pub fn view(model: &Model) -> Vec<Node<Msg>> {
     vec![
         view_head(model),
         view_nav(model),
-        device_list(model),
+        route_view(model),
         view_foot(),
     ]
 }
