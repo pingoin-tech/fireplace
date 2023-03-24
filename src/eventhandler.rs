@@ -32,13 +32,10 @@ pub struct Event {
     pub id: String,
     pub event: EventName,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub value: Option<Value>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub subdevice: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-#[serde(tag = "event", rename_all = "snake_case")]
 pub enum EventName {
     NewData,
     InputShort,

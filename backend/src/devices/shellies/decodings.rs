@@ -7,7 +7,7 @@ use crate::{
     eventhandler::EVENT_HANDLER,
     store::STORE,
 };
-use fireplace::eventhandler::{Value, EventName};
+use fireplace::eventhandler::{EventName, Value};
 use fireplace::{devices::DeviceType, eventhandler::Event};
 
 use super::{
@@ -197,8 +197,7 @@ pub fn decode_subdevice(telegram: Telegram, subdev: &str) {
 fn trigger_new_data(id: String, old_time: DateTime<Utc>) {
     let event = Event {
         id,
-        event:EventName::NewData,
-        value: None,
+        event: EventName::NewData,
         subdevice: None,
     };
 

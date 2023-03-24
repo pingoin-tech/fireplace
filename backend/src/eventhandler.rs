@@ -35,7 +35,6 @@ impl Handler {
         self.force_action(Event {
             id: "schlafenEltern-lichtSchalter".to_string(),
             event:EventName::Announce,
-            value: None,
             subdevice: None,
         });
     }

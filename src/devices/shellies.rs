@@ -40,13 +40,13 @@ impl Shelly {
             EventName::Announce => {
                 ActionType::MqttAction(format!("{}command", base_path), String::from("announce"))
             }
-            EventName::Update=> {
+            EventName::Update => {
                 ActionType::MqttAction(format!("{}command", base_path), String::from("update"))
             }
             EventName::On => {
                 ActionType::MqttAction(format!("{}light/0/command", base_path), String::from("on"))
             }
-            EventName::Off=> {
+            EventName::Off => {
                 ActionType::MqttAction(format!("{}light/0/command", base_path), String::from("off"))
             }
             _ => ActionType::NotAvailable,

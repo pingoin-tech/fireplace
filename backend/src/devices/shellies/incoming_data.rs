@@ -1,4 +1,7 @@
-use fireplace::{devices::shellies::Shelly, eventhandler::{Event, EventName}};
+use fireplace::{
+    devices::shellies::Shelly,
+    eventhandler::{Event, EventName},
+};
 use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ShellyAnnounce {
@@ -19,17 +22,19 @@ impl ShellyAnnounce {
             Event {
                 id: self.id.clone(),
                 event: EventName::Announce,
-                value: None,
                 subdevice: None,
             },
             Event {
                 id: self.id.clone(),
-                event:EventName::Update,
-                value: None,
+                event: EventName::Update,
                 subdevice: None,
             },
         ];
-        let events = vec![Event { id:self.id.clone(), event: EventName::NewData, value: None, subdevice:None }];
+        let events = vec![Event {
+            id: self.id.clone(),
+            event: EventName::NewData,
+            subdevice: None,
+        }];
         match self.model.as_str() {
             "SHSW-25" => {
                 if self.mode == Some(String::from("roller")) {
@@ -43,16 +48,14 @@ impl ShellyAnnounce {
             }
             "SHDM-2" => {
                 shelly_type = Shelly::ShellyDimmer;
-                actions.push(Event{
+                actions.push(Event {
                     id: self.id.clone(),
-                    event:EventName::On,
-                    value: None,
+                    event: EventName::On,
                     subdevice: None,
                 });
                 actions.push(Event {
                     id: self.id.clone(),
-                    event:EventName::Off,
-                    value: None,
+                    event: EventName::Off,
                     subdevice: None,
                 });
             }

@@ -1,4 +1,4 @@
-use fireplace::{devices::Device};
+use fireplace::devices::Device;
 use seed::{prelude::*, *};
 
 use crate::Msg;
