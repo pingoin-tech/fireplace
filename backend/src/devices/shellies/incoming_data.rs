@@ -19,22 +19,10 @@ impl ShellyAnnounce {
     pub fn to_shelly(&self) -> (Shelly, Vec<Event>, Vec<Event>) {
         let mut shelly_type = Shelly::Shelly1;
         let mut actions = vec![
-            Event {
-                id: self.id.clone(),
-                event: EventName::Announce,
-                subdevice: None,
-            },
-            Event {
-                id: self.id.clone(),
-                event: EventName::Update,
-                subdevice: None,
-            },
+            Event::new_action(&self.id, EventName::Announce),
+            Event::new_action(&self.id, EventName::Update),
         ];
-        let events = vec![Event {
-            id: self.id.clone(),
-            event: EventName::NewData,
-            subdevice: None,
-        }];
+        let events = vec![Event::new_event(&self.id, EventName::NewData)];
         match self.model.as_str() {
             "SHSW-25" => {
                 if self.mode == Some(String::from("roller")) {
@@ -48,16 +36,8 @@ impl ShellyAnnounce {
             }
             "SHDM-2" => {
                 shelly_type = Shelly::ShellyDimmer;
-                actions.push(Event {
-                    id: self.id.clone(),
-                    event: EventName::On,
-                    subdevice: None,
-                });
-                actions.push(Event {
-                    id: self.id.clone(),
-                    event: EventName::Off,
-                    subdevice: None,
-                });
+                actions.push(Event::new_action(&self.id, EventName::On));
+                actions.push(Event::new_action(&self.id, EventName::Off));
             }
             _ => {}
         }

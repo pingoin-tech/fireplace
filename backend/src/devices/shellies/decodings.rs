@@ -195,11 +195,7 @@ pub fn decode_subdevice(telegram: Telegram, subdev: &str) {
 }
 
 fn trigger_new_data(id: String, old_time: DateTime<Utc>) {
-    let event = Event {
-        id,
-        event: EventName::NewData,
-        subdevice: None,
-    };
+    let event = Event::new_event(&id, EventName::NewData);
 
     let diff = Utc::now() - old_time;
     if diff > Duration::seconds(1) {

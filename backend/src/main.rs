@@ -52,7 +52,6 @@ async fn main() {
             .service(devices)
             .service(version)
             .service(dev_setup)
-            .service(last_actions)
             .service(last_events)
             .service(links)
             .service(actix_files::Files::new("/", "./dist/").index_file("index.html"))
@@ -71,7 +70,7 @@ async fn devices() -> impl Responder {
             list.sort_by(|a, b| b.id.cmp(&a.id));
             return HttpResponse::Ok().json(list);
         },
-        HttpResponse::Ok().body("bla"),
+        HttpResponse::Ok().body("error"),
     )
 }
 
@@ -79,7 +78,7 @@ async fn devices() -> impl Responder {
 async fn links() -> impl Responder {
     STORE.open_locked(
         |store| HttpResponse::Ok().json(&store.config.extra_links),
-        HttpResponse::Ok().body("bla"),
+        HttpResponse::Ok().body("error"),
     )
 }
 
@@ -87,23 +86,15 @@ async fn links() -> impl Responder {
 async fn dev_setup() -> impl Responder {
     STORE.open_locked(
         |store| HttpResponse::Ok().json(&store.config.device_settings),
-        HttpResponse::Ok().body("bla"),
+        HttpResponse::Ok().body("error"),
     )
 }
 
 #[get("/api/last-events")]
 async fn last_events() -> impl Responder {
     EVENT_HANDLER.open_locked(
-        |handler| HttpResponse::Ok().json(&handler.last_events),
-        HttpResponse::Ok().body("bla"),
-    )
-}
-
-#[get("/api/last-actions")]
-async fn last_actions() -> impl Responder {
-    EVENT_HANDLER.open_locked(
-        |handler| HttpResponse::Ok().json(&handler.last_actions),
-        HttpResponse::Ok().body("bla"),
+        |handler| HttpResponse::Ok().json(&handler.event_buffer),
+        HttpResponse::Ok().body("error"),
     )
 }
 

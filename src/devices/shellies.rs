@@ -32,7 +32,7 @@ pub struct Telegram {
 }
 
 impl Shelly {
-    pub fn trigger_action(&mut self, action: Event) -> ActionType {
+    pub fn trigger_action(&mut self, action: &Event) -> ActionType {
         let base_path = format!("shellies/{}/", action.id);
         println!("{:?}", action.event.clone());
 

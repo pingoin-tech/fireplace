@@ -28,11 +28,44 @@ impl Display for Value {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Event {
-    ///ID of the device
+    /// ID of the device
     pub id: String,
+    /// which event is treiggered
     pub event: EventName,
+    /// time when event is triggered
+    pub timestamp: DateTime<Utc>,
+    /// wether it is an action or an event
+    pub event_type: EventType,
+    /// Wheter it is handled yet
+    pub handled: bool,
+    /// Subdevice which is concerned
+    /// None when main device is concerned
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subdevice: Option<String>,
+}
+
+impl Event {
+    pub fn new_action(id: &String, event: EventName) -> Self {
+        Self {
+            id: id.clone(),
+            event: event,
+            timestamp: Utc::now(),
+            event_type: EventType::Action,
+            handled: false,
+            subdevice: None,
+        }
+    }
+
+    pub fn new_event(id: &String, event: EventName) -> Self {
+        Self {
+            id: id.clone(),
+            event: event,
+            timestamp: Utc::now(),
+            event_type: EventType::Event,
+            handled: false,
+            subdevice: None,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -53,14 +86,14 @@ impl fmt::Display for EventName {
     }
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub enum EventType {
+    Event,
+    Action,
+}
+
 #[derive(PartialEq, Clone)]
 pub enum ActionType {
     NotAvailable,
     MqttAction(String, String),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct TimedEvent {
-    pub timestamp: DateTime<Utc>,
-    pub event: Event,
 }

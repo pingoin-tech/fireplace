@@ -1,6 +1,6 @@
 use crate::{devices, mutex_box::MutexBox};
 use chrono::Utc;
-use fireplace::eventhandler::{ActionType, Event, TimedEvent, EventName};
+use fireplace::eventhandler::{ActionType, Event, EventName};
 use rumqttc::{AsyncClient, QoS};
 use tokio::time::{sleep, Duration};
 
@@ -8,10 +8,7 @@ pub static EVENT_HANDLER: MutexBox<Handler> = MutexBox::new("EventHandler");
 
 pub struct Handler {
     client: AsyncClient,
-    event_buffer: Vec<Event>,
-    action_buffer: Vec<ActionType>,
-    pub last_events: Vec<TimedEvent>,
-    pub last_actions: Vec<TimedEvent>,
+    pub event_buffer: Vec<Event>,
 }
 
 impl Handler {
@@ -19,9 +16,6 @@ impl Handler {
         let handle = Handler {
             client: client,
             event_buffer: Vec::new(),
-            action_buffer: Vec::new(),
-            last_actions: Vec::new(),
-            last_events: Vec::new(),
         };
         return handle;
     }
@@ -32,75 +26,58 @@ impl Handler {
             .await
             .unwrap();
         sleep(Duration::from_millis(1000)).await;
-        self.force_action(Event {
-            id: "schlafenEltern-lichtSchalter".to_string(),
-            event:EventName::Announce,
-            subdevice: None,
-        });
+        self.force_action(Event::new_action(
+            &"schlafenEltern-lichtSchalter".to_string(),
+            EventName::Announce,
+        ));
     }
 
     pub fn trigger_event(&mut self, event: Event) {
-        self.last_events.push(TimedEvent {
-            event: event.clone(),
-            timestamp: Utc::now(),
-        });
-
         self.event_buffer.push(event);
     }
 
     pub fn force_action(&mut self, action_triggered: Event) -> bool {
-        self.last_actions.push(TimedEvent {
-            timestamp: Utc::now(),
-            event: action_triggered.clone(),
-        });
-
-        let action = devices::get_device_from_list(
-            action_triggered.id.clone(),
-            |device| device.trigger_action(action_triggered),
-            |_| ActionType::NotAvailable,
-            ActionType::NotAvailable,
-        );
-
-        self.action_buffer.push(action.clone());
-
-        if action == ActionType::NotAvailable {
-            false
-        } else {
-            true
-        }
-    }
-
-    async fn work_action(&mut self) {
-        if let Some(action) = self.action_buffer.pop() {
-            match action {
-                ActionType::NotAvailable => {}
-                ActionType::MqttAction(topic, payload) => {
-                    match self
-                        .client
-                        .publish(topic, QoS::AtLeastOnce, false, payload)
-                        .await
-                    {
-                        Ok(_) => {}
-                        Err(err) => {
-                            print!("{}", err);
-                        }
-                    }
-                }
-            }
-        }
+        self.event_buffer.push(action_triggered.clone());
+        true
     }
 
     pub async fn work(&mut self) {
         let now = Utc::now();
-        self.last_events.retain(|event| {
-            let result = now - event.timestamp <= chrono::Duration::seconds(20);
+        self.event_buffer.retain(|event| {
+            let result = now - event.timestamp <= chrono::Duration::seconds(60);
             result
         });
-        self.last_actions
-            .retain(|event| now - event.timestamp <= chrono::Duration::seconds(20));
-
-        self.event_buffer.pop();
-        self.work_action().await;
+        for event in self.event_buffer.iter_mut() {
+            if !event.handled {
+                match event.event_type {
+                    fireplace::eventhandler::EventType::Event => event.handled = true,
+                    fireplace::eventhandler::EventType::Action => {
+                        let action = devices::get_device_from_list(
+                            event.id.clone(),
+                            |device| device.trigger_action(event),
+                            |_| ActionType::NotAvailable,
+                            ActionType::NotAvailable,
+                        );
+                        match action {
+                            ActionType::NotAvailable => {}
+                            ActionType::MqttAction(topic, payload) => {
+                                match self
+                                    .client
+                                    .publish(topic, QoS::AtLeastOnce, false, payload)
+                                    .await
+                                {
+                                    Ok(_) => {}
+                                    Err(err) => {
+                                        print!("{}", err);
+                                    }
+                                }
+                            }
+                        }
+                        event.handled = true;
+                    }
+                }
+            }
+        }
     }
 }
 

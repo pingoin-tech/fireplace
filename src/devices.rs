@@ -37,7 +37,7 @@ impl Default for DeviceType {
 }
 
 impl Device {
-    pub fn trigger_action(&mut self, action: Event) -> ActionType {
+    pub fn trigger_action(&mut self, action: &Event) -> ActionType {
         match &mut self.subdevice {
             DeviceType::Shelly(device) => device.trigger_action(action),
             DeviceType::Empty => ActionType::NotAvailable,

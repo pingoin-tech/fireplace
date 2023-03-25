@@ -1,9 +1,5 @@
 //! The simplest fetch example.
-use fireplace::{
-    config::Link,
-    devices::Device,
-    eventhandler::{Event, TimedEvent},
-};
+use fireplace::{config::Link, devices::Device, eventhandler::Event};
 use seed::prelude::*;
 use serde_json;
 mod components;
@@ -26,9 +22,9 @@ pub struct Model {
     pub version: Option<String>,
     pub devices: Vec<Device>,
     pub links: Vec<Link>,
-    pub last_events: Vec<TimedEvent>,
+    pub last_events: Vec<Event>,
     pub route: Option<Page>,
-    pub last_actions: Vec<TimedEvent>,
+    pub last_actions: Vec<Event>,
 }
 
 // ------ ------
@@ -52,8 +48,8 @@ pub enum Msg {
     ReceivedVersion(String),
     ReceivedDevices(Vec<Device>),
     ReceivedLinks(Vec<Link>),
-    ReceivedLastActions(Vec<TimedEvent>),
-    ReceivedLastEvents(Vec<TimedEvent>),
+    ReceivedLastActions(Vec<Event>),
+    ReceivedLastEvents(Vec<Event>),
     TriggerAction(Event),
 }
 
@@ -75,13 +71,6 @@ pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                 .perform_cmd(fetch("/api/links", |response| {
                     if let Ok(links) = serde_json::from_str(&response) {
                         Some(Msg::ReceivedLinks(links))
-                    } else {
-                        None
-                    }
-                }))
-                .perform_cmd(fetch("/api/last_actions", |response| {
-                    if let Ok(actions) = serde_json::from_str(&response) {
-                        Some(Msg::ReceivedLastActions(actions))
                     } else {
                         None
                     }

@@ -1,37 +1,30 @@
 use crate::{Model, Msg};
+use fireplace::eventhandler::EventType;
 use seed::{prelude::*, *};
 
 pub fn events(model: &Model) -> Node<Msg> {
     let mut last_events: Vec<Node<Msg>> = Vec::new();
-    for event in &model.last_events {
-        last_events.push(li! {
-            event.event.id.to_string(),
-            br!(),
-            ul!(
-                li!(
-                    event.timestamp.to_string(),
-                ),
-                li!(
-                    event.event.event.to_string(),
-                )
-            )
-        });
-    }
-
     let mut last_actions: Vec<Node<Msg>> = Vec::new();
-    for event in &model.last_actions {
-        last_actions.push(li! {
-            event.event.id.to_string(),
+
+    for event in &model.last_events {
+        let entry = li! {
+            event.id.to_string(),
             br!(),
             ul!(
                 li!(
                     event.timestamp.to_string(),
                 ),
                 li!(
-                    event.event.event.to_string(),
+                    event.event.to_string(),
                 )
             )
-        });
+        };
+
+        if event.event_type == EventType::Action {
+            last_actions.push(entry);
+        } else {
+            last_events.push(entry);
+        }
     }
 
     main![
