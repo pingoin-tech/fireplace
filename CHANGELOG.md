@@ -1,4 +1,22 @@
 # Changelog
+## [0.1.3](https://github.com/pingoin-tech/fireplace/releases/tag/0.1.3):
+### Features:
+- reworked event/action handling ([dd606ab](https://github.com/pingoin-tech/fireplace/commit/dd606abf4780cdb908aa54e2f209a042c4cb66d2))
+- reworked event and action lists ([0fbeb05](https://github.com/pingoin-tech/fireplace/commit/0fbeb056086032199416e3bd3919c2111cd4396f))
+- show last Events/Actions & simple routing ([06f1f84](https://github.com/pingoin-tech/fireplace/commit/06f1f841002285171cf1fe1daca6ec03f1572f6e))
+- formating, removed value part of event (Can be part od Enum) ([efee5ab](https://github.com/pingoin-tech/fireplace/commit/efee5ab5eaa875f1ee7f5ab9315021f4754ef6ed))
+- changed events and actions string -> enum ([47914ea](https://github.com/pingoin-tech/fireplace/commit/47914ea4fa5581383789413625608bd9f66fe1a9))
+- save events and actions of last 20 secs ([b23067b](https://github.com/pingoin-tech/fireplace/commit/b23067ba7497d073dd391fc83b0273276903b0e4))
+- moved from yew to seed as frontend framework ([9a1035e](https://github.com/pingoin-tech/fireplace/commit/9a1035eaedb100359b3ea3ccf514aecd7b997c5c))
+- readable uptime-values ([acffccb](https://github.com/pingoin-tech/fireplace/commit/acffccbb850e835366f34e6e832f8a908b95b648))
+- extended actions ([e624f35](https://github.com/pingoin-tech/fireplace/commit/e624f35a00c926e7218f25d269770fc7ccfb0a8d))
+- new device view ([ac496da](https://github.com/pingoin-tech/fireplace/commit/ac496da3c63d45225df5389b84a64b2ab2ac2c44))
+- created struct for mutexes ([6798a9f](https://github.com/pingoin-tech/fireplace/commit/6798a9f4ee040d0d0baad8c094a363a1cb3ba871))
+- implement alias for devices ([65b7d32](https://github.com/pingoin-tech/fireplace/commit/65b7d32f824979c336333347464aed5fdeeaa845))
+### Organisation:
+- format and build reordered ([a91cb1f](https://github.com/pingoin-tech/fireplace/commit/a91cb1f877389615b080e7bb2f6ee5e204f94f1d))
+### Other:
+- feat more parallels in mqtt ([737c516](https://github.com/pingoin-tech/fireplace/commit/737c516655f5f6c438002502e1f6749f97e38bfd))
 ## [0.1.2](https://github.com/pingoin-tech/fireplace/releases/tag/0.1.2):
 ### Features:
 - show version in frontend ([ab63f63](https://github.com/pingoin-tech/fireplace/commit/ab63f6363483054ff4be2b64e6722e306028c0a6))
