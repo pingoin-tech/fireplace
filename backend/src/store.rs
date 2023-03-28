@@ -14,7 +14,11 @@ fn read_config() -> ConfigFile {
         if let Ok(config) = toml::from_str(&file) {
             result = config;
             fileok = false;
+        } else {
+            println!("Error on Config read");
         }
+    } else {
+        println!("Error on Config read");
     }
 
     if !fileok {

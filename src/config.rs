@@ -4,9 +4,11 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
 pub struct ConfigFile {
+    #[serde(default)]
     pub extra_links: Vec<Link>,
     pub mqtt_broker: Server,
     pub http_server: Server,
+    pub influx_server: Option<Server>,
     pub device_settings: BTreeMap<String, DeviceSetup>,
 }
 
@@ -38,6 +40,7 @@ impl Default for ConfigFile {
             extra_links: links,
             mqtt_broker: mqtt,
             http_server: http,
+            influx_server: None,
             device_settings: BTreeMap::new(),
         }
     }
@@ -51,13 +54,20 @@ pub struct Link {
 
 #[derive(Deserialize, Serialize, Clone, Debug, Default, PartialEq)]
 pub struct Server {
+    #[serde(default)]
     pub host: String,
+    #[serde(default)]
     pub port: u16,
+    #[serde(default)]
     pub user: Option<String>,
+    #[serde(default)]
     pub password: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, Default, PartialEq)]
 pub struct DeviceSetup {
+    #[serde(default)]
     pub alias: String,
+    #[serde(default)]
+    pub logged_values: Vec<String>,
 }

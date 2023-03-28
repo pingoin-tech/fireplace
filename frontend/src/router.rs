@@ -1,4 +1,4 @@
-use seed::{prelude::*, *};
+use seed::prelude::*;
 
 use crate::views::{device_list, events};
 use crate::{Model, Msg};

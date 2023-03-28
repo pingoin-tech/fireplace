@@ -47,37 +47,52 @@ impl Handler {
             let result = now - event.timestamp <= chrono::Duration::seconds(60);
             result
         });
-        for event in self.event_buffer.iter_mut() {
+        let mut tmp_event_buffer = self.event_buffer.clone();
+
+        for event in tmp_event_buffer.iter_mut() {
             if !event.handled {
                 match event.event_type {
-                    fireplace::eventhandler::EventType::Event => event.handled = true,
-                    fireplace::eventhandler::EventType::Action => {
-                        let action = devices::get_device_from_list(
-                            event.id.clone(),
-                            |device| device.trigger_action(event),
-                            |_| ActionType::NotAvailable,
-                            ActionType::NotAvailable,
-                        );
-                        match action {
-                            ActionType::NotAvailable => {}
-                            ActionType::MqttAction(topic, payload) => {
-                                match self
-                                    .client
-                                    .publish(topic, QoS::AtLeastOnce, false, payload)
-                                    .await
-                                {
-                                    Ok(_) => {}
-                                    Err(err) => {
-                                        print!("{}", err);
-                                    }
-                                }
-                            }
-                        }
-                        event.handled = true;
+                    fireplace::eventhandler::EventType::Event => self.work_event(event).await,
+                    fireplace::eventhandler::EventType::Action => self.work_action(event).await,
+                }
+            }
+        }
+        self.event_buffer = tmp_event_buffer;
+    }
+
+    async fn work_action(&mut self, event: &mut Event) {
+        let action = devices::get_device_from_list(
+            event.id.clone(),
+            |device| device.trigger_action(event),
+            |_| ActionType::NotAvailable,
+            ActionType::NotAvailable,
+        );
+        match action {
+            ActionType::NotAvailable => {}
+            ActionType::MqttAction(topic, payload) => {
+                match self
+                    .client
+                    .publish(topic, QoS::AtLeastOnce, false, payload)
+                    .await
+                {
+                    Ok(_) => {}
+                    Err(err) => {
+                        print!("{}", err);
                     }
                 }
             }
         }
+        event.handled = true;
+    }
+
+    async fn work_event(&mut self, event: &mut Event) {
+        match event.event {
+            EventName::NewData => (),
+            EventName::InputShort => (),
+            EventName::InputLong => (),
+            _ => (),
+        }
+        event.handled = true;
     }
 }
 

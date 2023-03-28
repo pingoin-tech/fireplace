@@ -6,6 +6,7 @@ use crate::{
     devices::{get_device_from_list, insert_value_in_device, Device},
     eventhandler::EVENT_HANDLER,
     store::STORE,
+    utils::format_mac,
 };
 use fireplace::eventhandler::{EventName, Value};
 use fireplace::{devices::DeviceType, eventhandler::Event};
@@ -31,7 +32,7 @@ pub fn decode_announce(content: Telegram) {
                 dev.subdevice = DeviceType::Shelly(shelly);
                 dev.values
                     .insert("firmware".to_string(), Value::String(device.fw_ver));
-                dev.mac = device.mac;
+                dev.mac = format_mac(device.mac);
                 dev.last_message = Utc::now();
                 dev.last_data = Utc::now();
                 dev.available_actions = actions;
