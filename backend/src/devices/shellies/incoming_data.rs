@@ -27,17 +27,28 @@ impl ShellyAnnounce {
             "SHSW-25" => {
                 if self.mode == Some(String::from("roller")) {
                     shelly_type = Shelly::Shelly25Roller;
+                    actions.push(Event::new_action(&self.id, EventName::Toggle));
+                    actions.push(Event::new_action(&self.id, EventName::Open));
+                    actions.push(Event::new_action(&self.id, EventName::Close));
+                    actions.push(Event::new_action(&self.id, EventName::Stop));
                 } else {
                     shelly_type = Shelly::Shelly25Switch;
+                    actions.push(Event::new_action(&self.id, EventName::On));
+                    actions.push(Event::new_action(&self.id, EventName::Off));
+                    actions.push(Event::new_action(&self.id, EventName::Toggle));
                 }
             }
             "SHSW-1" => {
                 shelly_type = Shelly::Shelly1;
+                actions.push(Event::new_action(&self.id, EventName::On));
+                actions.push(Event::new_action(&self.id, EventName::Off));
+                actions.push(Event::new_action(&self.id, EventName::Toggle));
             }
             "SHDM-2" => {
                 shelly_type = Shelly::ShellyDimmer;
                 actions.push(Event::new_action(&self.id, EventName::On));
                 actions.push(Event::new_action(&self.id, EventName::Off));
+                actions.push(Event::new_action(&self.id, EventName::Toggle));
             }
             _ => {}
         }
@@ -158,4 +169,10 @@ pub struct ShellyInfo {
     fs_size: u32,
     fs_free: u32,
     pub uptime: u32,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+pub struct InputEvent {
+    pub event: char,
+    pub event_cnt: usize,
 }

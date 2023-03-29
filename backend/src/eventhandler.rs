@@ -44,7 +44,7 @@ impl Handler {
     pub async fn work(&mut self) {
         let now = Utc::now();
         self.event_buffer.retain(|event| {
-            let result = now - event.timestamp <= chrono::Duration::seconds(60);
+            let result = now - event.timestamp <= chrono::Duration::seconds(600);
             result
         });
         let mut tmp_event_buffer = self.event_buffer.clone();

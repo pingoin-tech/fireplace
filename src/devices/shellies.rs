@@ -1,4 +1,5 @@
-use crate::eventhandler::{ActionType, Event, EventName};
+use crate::eventhandler::{ActionType, Event, EventName, Value};
+use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
@@ -32,9 +33,16 @@ pub struct Telegram {
 }
 
 impl Shelly {
-    pub fn trigger_action(&mut self, action: &Event) -> ActionType {
+    pub fn trigger_action(
+        &mut self,
+        action: &Event,
+        values: BTreeMap<String, Value>,
+    ) -> ActionType {
         let base_path = format!("shellies/{}/", action.id);
-        println!("{:?}", action.event.clone());
+        let index = match action.index {
+            Some(index) => index,
+            None => 0,
+        };
 
         match action.event {
             EventName::Announce => {
@@ -49,6 +57,87 @@ impl Shelly {
             EventName::Off => {
                 ActionType::MqttAction(format!("{}light/0/command", base_path), String::from("off"))
             }
+            EventName::Toggle => match self {
+                Shelly::Shelly1 => ActionType::MqttAction(
+                    format!("{}relay/{}/command", base_path, index),
+                    "toggle".to_string(),
+                ),
+                Shelly::ShellyDimmer => {
+                    let toggle = match values.get("light-on") {
+                        Some(is_on) => match is_on {
+                            Value::Bool(is_on) => !!is_on,
+                            _ => false,
+                        },
+                        None => false,
+                    };
+                    let toggle = if toggle { "off" } else { "on" };
+                    ActionType::MqttAction(
+                        format!("{}light/{}/command", base_path, 0),
+                        toggle.to_string(),
+                    )
+                }
+                Shelly::Shelly25Roller => {
+                    let toggle = {
+                        if let Some(Value::String(status)) = values.get("roller-status") {
+                            if status.as_str() != "stop" {
+                                "stop"
+                            } else {
+                                if let Some(Value::String(last_dir)) =
+                                    values.get("roller-last-direction")
+                                {
+                                    if last_dir.as_str() == "open" {
+                                        "close"
+                                    } else {
+                                        "open"
+                                    }
+                                } else {
+                                    if let Some(Value::Number(pos)) = values.get("roller-position")
+                                    {
+                                        if pos.abs() > 50.0 {
+                                            "close"
+                                        } else {
+                                            "open"
+                                        }
+                                    } else {
+                                        "open"
+                                    }
+                                }
+                            }
+                        } else {
+                            "open"
+                        }
+                    };
+                    ActionType::MqttAction(
+                        format!("{}roller/{}/command", base_path, index),
+                        toggle.to_string(),
+                    )
+                }
+                Shelly::Shelly25Switch => ActionType::MqttAction(
+                    format!("{}relay/{}/command", base_path, index),
+                    "toggle".to_string(),
+                ),
+            },
+            EventName::Open => match self {
+                Shelly::Shelly25Roller => ActionType::MqttAction(
+                    format!("{}roller/{}/command", base_path, index),
+                    "open".to_string(),
+                ),
+                _ => ActionType::NotAvailable,
+            },
+            EventName::Close => match self {
+                Shelly::Shelly25Roller => ActionType::MqttAction(
+                    format!("{}roller/{}/command", base_path, index),
+                    "close".to_string(),
+                ),
+                _ => ActionType::NotAvailable,
+            },
+            EventName::Stop => match self {
+                Shelly::Shelly25Roller => ActionType::MqttAction(
+                    format!("{}roller/{}/command", base_path, index),
+                    "stop".to_string(),
+                ),
+                _ => ActionType::NotAvailable,
+            },
             _ => ActionType::NotAvailable,
         }
     }

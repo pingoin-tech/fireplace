@@ -1,5 +1,6 @@
 use self::decodings::{
-    decode_announce, decode_info, decode_other, decode_roller, decode_subdevice, decode_value,
+    decode_announce, decode_info, decode_input_event, decode_other, decode_roller,
+    decode_subdevice, decode_value,
 };
 use std::str::FromStr;
 use ts_rs::TS;
@@ -30,6 +31,14 @@ pub struct Telegram {
 }
 
 pub fn decode_shelly_sub(content: &Publish) {
+    /* Open Topics:
+    State input: schlafenEltern-dimmer/None/Some(0)/input_event: "{\"event\":\"S\",\"event_cnt\":495}"
+    State input: schlafenEltern-dimmer/None/Some(0)/longpush: "0"
+    State input: schlafenEltern-dimmer/None/Some(1)/longpush: "0"
+    State input: schlafenEltern-dimmer/None/Some(1)/input_event: "{\"event\":\"S\",\"event_cnt\":5}"
+
+    */
+
     let topic = content.topic.split("/");
 
     let mut topic_list = Vec::new();
@@ -100,11 +109,13 @@ pub fn decode_shelly_sub(content: &Publish) {
         "overtemperature" => {}
         "overpower" => {}
         "loaderror" => {}
+        "longpush" => {}
         "temperature_status" => {}
         "roller" => decode_roller(tel),
         "relay" => decode_subdevice(tel, "relay"),
         "light" => decode_subdevice(tel, "light"),
         "input" => decode_subdevice(tel, "input"),
+        "input_event" => decode_input_event(tel),
         "info" => decode_info(tel),
         "voltage" => decode_value(tel, "voltage"),
         "temperature" => decode_value(tel, "temperature"),

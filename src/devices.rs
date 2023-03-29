@@ -38,8 +38,9 @@ impl Default for DeviceType {
 
 impl Device {
     pub fn trigger_action(&mut self, action: &Event) -> ActionType {
+        let vals = self.values.clone();
         match &mut self.subdevice {
-            DeviceType::Shelly(device) => device.trigger_action(action),
+            DeviceType::Shelly(device) => device.trigger_action(action, vals),
             DeviceType::Empty => ActionType::NotAvailable,
         }
     }

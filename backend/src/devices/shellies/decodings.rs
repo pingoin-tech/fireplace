@@ -2,19 +2,18 @@ use chrono::{DateTime, Duration, Utc};
 use serde_json::Error;
 use std::str::FromStr;
 
+use super::{
+    incoming_data::{InputEvent, ShellyAnnounce, ShellyInfo},
+    Telegram,
+};
 use crate::{
     devices::{get_device_from_list, insert_value_in_device, Device},
     eventhandler::EVENT_HANDLER,
     store::STORE,
     utils::format_mac,
 };
-use fireplace::eventhandler::{EventName, Value};
+use fireplace::eventhandler::{EventName, EventType, Value};
 use fireplace::{devices::DeviceType, eventhandler::Event};
-
-use super::{
-    incoming_data::{ShellyAnnounce, ShellyInfo},
-    Telegram,
-};
 
 pub fn decode_announce(content: Telegram) {
     let dev_res: Result<ShellyAnnounce, Error> = serde_json::from_str(&content.payload.as_str());
@@ -170,7 +169,8 @@ pub fn decode_subdevice(telegram: Telegram, subdev: &str) {
                 }
             }
             Some("energy") => {
-                if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
+                if let Ok(mut val) = f32::from_str(telegram.payload.as_str()) {
+                    val = val / (60000.0); // from Watt*Minute to kWh
                     old_data_time = insert_value_in_device(
                         telegram.id.clone(),
                         create_val_key((subdev.to_string() + "-energy").as_str(), index),
@@ -210,7 +210,7 @@ pub fn decode_roller(telegram: Telegram) {
         let id = telegram.id.clone();
         match telegram.subdevice.as_deref() {
             None => {
-                old_data_time = insert_value_in_device(
+                old_data_time = update_roller_stat(
                     telegram.id,
                     create_val_key("roller-status", index),
                     Value::String(telegram.payload),
@@ -226,7 +226,8 @@ pub fn decode_roller(telegram: Telegram) {
                 }
             }
             Some("energy") => {
-                if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
+                if let Ok(mut val) = f32::from_str(telegram.payload.as_str()) {
+                    val = val / (60000.0); // from Watt*Minute to kWh
                     old_data_time = insert_value_in_device(
                         telegram.id,
                         create_val_key("roller-energy", index),
@@ -261,5 +262,49 @@ fn create_val_key(name: &str, pos: usize) -> String {
         name.to_string()
     } else {
         format!("{}-{}", name, pos)
+    }
+}
+
+fn update_roller_stat(id: String, key: String, val: Value) -> (bool, DateTime<Utc>) {
+    get_device_from_list(
+        id,
+        |device| {
+            let old_time = device.last_data.clone();
+            device.last_data = Utc::now();
+            if val.clone() != Value::String("stop".to_string()) {
+                device
+                    .values
+                    .insert(key.replace("status", "last-direction"), val.clone());
+            }
+            device.values.insert(key, val);
+            (true, old_time)
+        },
+        |_| (false, Utc::now()),
+        (false, Utc::now()),
+    )
+}
+
+pub fn decode_input_event(telegram: Telegram) {
+    let input_event: Result<InputEvent, Error> = serde_json::from_str(&telegram.payload.as_str());
+
+    match input_event {
+        Ok(input_event) => {
+            let event_name = match input_event.event {
+                'L' => EventName::InputLong,
+                _ => EventName::InputShort,
+            };
+
+            let event = Event {
+                id: telegram.id,
+                event: event_name,
+                timestamp: Utc::now(),
+                event_type: EventType::Event,
+                handled: false,
+                subdevice: telegram.subdevice,
+                index: None,
+            };
+            EVENT_HANDLER.open_locked(|handler| handler.trigger_event(event), ());
+        }
+        Err(err) => println!("{:?}", err),
     }
 }

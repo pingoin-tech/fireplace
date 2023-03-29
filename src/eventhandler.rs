@@ -42,6 +42,10 @@ pub struct Event {
     /// None when main device is concerned
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subdevice: Option<String>,
+    /// Index
+    /// None when main device is concerned
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
 impl Event {
@@ -53,6 +57,7 @@ impl Event {
             event_type: EventType::Action,
             handled: false,
             subdevice: None,
+            index: None,
         }
     }
 
@@ -64,6 +69,7 @@ impl Event {
             event_type: EventType::Event,
             handled: false,
             subdevice: None,
+            index: None,
         }
     }
 }
@@ -75,6 +81,9 @@ pub enum EventName {
     InputLong,
     On,
     Off,
+    Open,
+    Close,
+    Stop,
     Toggle,
     Update,
     Announce,
