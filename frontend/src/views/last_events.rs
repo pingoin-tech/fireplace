@@ -1,5 +1,5 @@
 use crate::{Model, Msg};
-use fireplace::eventhandler::EventType;
+use fireplace::eventhandler::{EventName, EventType};
 use seed::{prelude::*, *};
 
 pub fn events(model: &Model) -> Node<Msg> {
@@ -19,11 +19,12 @@ pub fn events(model: &Model) -> Node<Msg> {
                 )
             )
         };
-
-        if event.event_type == EventType::Action {
-            last_actions.push(entry);
-        } else {
-            last_events.push(entry);
+        if event.event != EventName::NewData {
+            if event.event_type == EventType::Action {
+                last_actions.push(entry);
+            } else {
+                last_events.push(entry);
+            }
         }
     }
 

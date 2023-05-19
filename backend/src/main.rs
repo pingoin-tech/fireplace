@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use actix_files;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use backend::{
@@ -8,11 +6,12 @@ use backend::{
     mqtt,
     store::{init_store, STORE},
 };
-use fireplace::{config::Server, eventhandler::Event};
+use fireplace::{config::Server, devices::{Device, DeviceType}, eventhandler::Event};
+use git_version::git_version;
 use rumqttc::QoS;
+use std::{collections::BTreeMap, time::Duration};
 use tokio::{self, task, time::sleep};
 
-use git_version::git_version;
 const GIT_VERSION: &str = git_version!(args = ["--always", "--tags"]);
 
 #[tokio::main]
@@ -21,14 +20,30 @@ async fn main() {
     init_sensor_list();
     let mut mqtt_broker = Server::default();
     let mut http_server = Server::default();
+    let mut config_devices = BTreeMap::new();
     STORE.open_locked(
         |store| {
             mqtt_broker = store.config.mqtt_broker.clone();
             http_server = store.config.http_server.clone();
+            config_devices = store.config.device_settings.clone();
         },
         (),
     );
 
+    for (id, dev) in config_devices {
+        if let Some(device) = dev.device_type {
+            SENSOR_LIST.open_locked(
+                |devs| {
+                    let mut new = Device::default();
+                    new.subdevice = DeviceType::from_string(& device);
+                    new.id = id;
+                    new.alias=Some(dev.alias);
+                    devs.push(new)
+                },
+                (),
+            )
+        }
+    }
     let (client, eventloop) = mqtt::init("rumqtt-async", mqtt_broker.host, mqtt_broker.port);
 
     client

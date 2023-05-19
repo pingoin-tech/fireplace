@@ -51,12 +51,36 @@ impl Shelly {
             EventName::Update => {
                 ActionType::MqttAction(format!("{}command", base_path), String::from("update"))
             }
-            EventName::On => {
-                ActionType::MqttAction(format!("{}light/0/command", base_path), String::from("on"))
-            }
-            EventName::Off => {
-                ActionType::MqttAction(format!("{}light/0/command", base_path), String::from("off"))
-            }
+            EventName::On => match self {
+                Shelly::Shelly1 => ActionType::MqttAction(
+                    format!("{}relay/{}/command", base_path, index),
+                    "on".to_string(),
+                ),
+                Shelly::ShellyDimmer => ActionType::MqttAction(
+                    format!("{}light/{}/command", base_path, 0),
+                    "on".to_string(),
+                ),
+                Shelly::Shelly25Roller => ActionType::NotAvailable,
+                Shelly::Shelly25Switch => ActionType::MqttAction(
+                    format!("{}relay/{}/command", base_path, index),
+                    "on".to_string(),
+                ),
+            },
+            EventName::Off => match self {
+                Shelly::Shelly1 => ActionType::MqttAction(
+                    format!("{}relay/{}/command", base_path, index),
+                    "off".to_string(),
+                ),
+                Shelly::ShellyDimmer => ActionType::MqttAction(
+                    format!("{}light/{}/command", base_path, 0),
+                    "off".to_string(),
+                ),
+                Shelly::Shelly25Roller => ActionType::NotAvailable,
+                Shelly::Shelly25Switch => ActionType::MqttAction(
+                    format!("{}relay/{}/command", base_path, index),
+                    "off".to_string(),
+                ),
+            },
             EventName::Toggle => match self {
                 Shelly::Shelly1 => ActionType::MqttAction(
                     format!("{}relay/{}/command", base_path, index),

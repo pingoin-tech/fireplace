@@ -36,12 +36,24 @@ impl Default for DeviceType {
     }
 }
 
+impl DeviceType {
+    pub fn from_string(string: &String) -> Self {
+        let input = string.to_lowercase();
+        match input.as_str() {
+            _ => DeviceType::Empty,
+        }
+    }
+}
+
 impl Device {
     pub fn trigger_action(&mut self, action: &Event) -> ActionType {
         let vals = self.values.clone();
         match &mut self.subdevice {
             DeviceType::Shelly(device) => device.trigger_action(action, vals),
-            DeviceType::Empty => ActionType::NotAvailable,
+            DeviceType::Empty => {
+                println!("{:?}", action);
+                ActionType::NotAvailable
+            }
         }
     }
 }

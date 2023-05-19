@@ -1,6 +1,5 @@
-use std::collections::BTreeMap;
-
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
 pub struct ConfigFile {
@@ -70,4 +69,6 @@ pub struct DeviceSetup {
     pub alias: String,
     #[serde(default)]
     pub logged_values: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub device_type: Option<String>,
 }
