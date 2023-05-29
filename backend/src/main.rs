@@ -1,7 +1,7 @@
 use actix_files;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use backend::{
-    devices::{init_sensor_list, SENSOR_LIST},
+    devices::{init_sensor_list, SENSOR_LIST,weather_underground_device::weatherstation},
     eventhandler::{Handler, EVENT_HANDLER},
     mqtt,
     store::{init_store, STORE},
@@ -68,6 +68,7 @@ async fn main() {
             .service(version)
             .service(dev_setup)
             .service(last_events)
+            .service(weatherstation)
             .service(links)
             .service(actix_files::Files::new("/", "./dist/").index_file("index.html"))
     })
@@ -96,6 +97,9 @@ async fn links() -> impl Responder {
         HttpResponse::Ok().body("error"),
     )
 }
+
+
+
 
 #[get("/api/device-setup")]
 async fn dev_setup() -> impl Responder {

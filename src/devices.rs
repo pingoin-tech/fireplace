@@ -27,6 +27,7 @@ pub struct Device {
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum DeviceType {
     Shelly(Shelly),
+    WeatherUndergrundDevice,
     Empty,
 }
 
@@ -51,6 +52,10 @@ impl Device {
         match &mut self.subdevice {
             DeviceType::Shelly(device) => device.trigger_action(action, vals),
             DeviceType::Empty => {
+                println!("{:?}", action);
+                ActionType::NotAvailable
+            }
+            DeviceType::WeatherUndergrundDevice => {
                 println!("{:?}", action);
                 ActionType::NotAvailable
             }

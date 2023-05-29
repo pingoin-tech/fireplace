@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
 use fireplace::devices::Device;
 pub mod shellies;
+pub mod weather_underground_device;
 
 use fireplace::eventhandler::Value;
 
