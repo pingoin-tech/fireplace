@@ -1,4 +1,9 @@
 # Changelog
+## [0.1.4](https://github.com/pingoin-tech/fireplace/releases/tag/0.1.4):
+### Features:
+- implement weather undergrund device ([493fb7f](https://github.com/pingoin-tech/fireplace/commit/493fb7f26b31f685632404cc91b892a61fa51468))
+- better action handling ([9a70ff5](https://github.com/pingoin-tech/fireplace/commit/9a70ff52bf863c4b68be63c1c0bc9159a46146c9))
+- implemented missing Shelly actions &  events ([084410a](https://github.com/pingoin-tech/fireplace/commit/084410a6d56600c8e3a4893d38c9c67b3d65b846))
 ## [0.1.3](https://github.com/pingoin-tech/fireplace/releases/tag/0.1.3):
 ### Features:
 - reworked event/action handling ([dd606ab](https://github.com/pingoin-tech/fireplace/commit/dd606abf4780cdb908aa54e2f209a042c4cb66d2))
