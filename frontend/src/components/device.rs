@@ -1,47 +1,66 @@
 use fireplace::devices::Device;
-use seed::{prelude::*, *};
+use sycamore::{futures::spawn_local_scoped, prelude::*};
 
-use crate::Msg;
+use crate::utils::post;
 
-pub fn device_field(device: &Device) -> Node<Msg> {
-    let name = if let Some(name) = &device.alias {
+#[component(inline_props)]
+pub fn DeviceField<'a, G: Html>(cx: Scope<'a>, device: Device) -> View<G> {
+    let name = if let Some(name) = device.alias.clone() {
         name
     } else {
-        &device.id
+        device.id.clone()
     };
 
-    let mut actions: Vec<Node<Msg>> = Vec::new();
+    let address = format!("http://{}", &device.ip);
 
-    for action in &device.available_actions {
-        let event = action.clone();
-        actions.push(button!(
-            ev(Ev::Click, |_| Msg::TriggerAction(event)),
-            &action.event.to_string()
-        ));
+    let actions: View<G> = View::new_fragment(
+        device
+            .available_actions
+            .into_iter()
+            .map(|x| {
+                let event = x.clone();
+                view! { cx,
+                    button(on:click=move |_|{
+                        let bla=event.clone();
+                        spawn_local_scoped(cx, async move {
+                            post("/api/trigger-action",bla , move |_|{}).await;
+                        })
+                    }){ (x.event.to_string())}
+                }
+            })
+            .collect(),
+    );
+
+    let values = View::new_fragment(
+        device
+            .values
+            .into_iter()
+            .map(|x| {
+                view! { cx,
+                div { (x.0) }
+                div{(format!("{}", x.1))}
+                }
+            })
+            .collect(),
+    );
+
+    view! { cx,
+        article(class="dual-column"){
+            h3{(name)}
+            div{"IP"}
+            div{
+               a(
+                Href=address){
+                    (device.ip.clone())
+                }
+                br()
+               (device.mac)
+            }
+            div{"RSSI"}
+            div{(format!("{}", device.rssi))}
+            (values)
+            div{"actions"}
+            div{(actions)}
+        }
     }
-
-    let mut values: Vec<Node<Msg>> = Vec::new();
-
-    for value in &device.values {
-        values.push(div!(value.0));
-        values.push(div!(format!("{}", value.1)));
-    }
-    article![
-        C!("dual-column"),
-        h3!(name),
-        div!("IP"),
-        div!(
-            a!(
-                attrs!(At::Href=>format!("http://{}",device.ip),At::Target=>"_blank"),
-                &device.ip
-            ),
-            br!(),
-            &device.mac
-        ),
-        div!("RSSI"),
-        div!(format!("{}", device.rssi)),
-        values,
-        div!("actions"),
-        div![actions]
-    ]
 }

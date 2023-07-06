@@ -1,45 +1,60 @@
-use seed::{prelude::*, *};
+//use seed::{prelude::*, *};
+use sycamore::prelude::*;
+use fireplace::{config::Link};
 
-use crate::{router::Page, Model, Msg};
-
-pub fn view_head(model: &Model) -> Node<Msg> {
-    header![
-        div![img![attrs![At::Src=>"logo.svg",At::Height=>"60"]]],
-        div! {"Fireplace"},
-        div! {&model.version},
-    ]
+#[derive(Prop)]
+pub struct HeaderProps<'a> {
+    version: &'a ReadSignal<String>,
 }
 
-pub fn view_nav(model: &Model) -> Node<Msg> {
-    let mut links: Vec<Node<Msg>> = Vec::new();
-    for link in &model.links {
-        links.push(li!(a![
-            C!["router-link-active", "router-link-exact-active"],
-            attrs!(At::Href=>link.address),
-            &link.name
-        ]));
+#[component]
+pub fn ViewHead<'a, G: Html>(cx: Scope<'a>, props: HeaderProps<'a>) -> View<G>{
+    view! { cx,
+        header{
+            div{}
+            div{"Fireplace"}
+            div{ (props.version.get())}
+        }
+        
     }
-
-    nav![ul![
-        li!(a![
-            C!["router-link-active", "router-link-exact-active"],
-            attrs!(At::Href=>"/"),
-            "Home"
-        ]),
-        li!(a![
-            C!["router-link-active", "router-link-exact-active"],
-            ev(Ev::Click, |_| Msg::SetView(Page::DeviceList)),
-            "Device List"
-        ]),
-        li!(a![
-            C!["router-link-active", "router-link-exact-active"],
-            ev(Ev::Click, |_| Msg::SetView(Page::LastAction)),
-            "Last Events"
-        ]),
-        links
-    ]]
 }
 
-pub fn view_foot() -> Node<Msg> {
-    footer!["© Pingoin-Tech"]
+
+#[derive(Prop)]
+pub struct NavProps<'a> {
+    links: &'a ReadSignal<Vec<Link>>,
+}
+
+#[component]
+pub fn ViewNav<'a,G: Html>(cx: Scope<'a>, props: NavProps<'a>) -> View<G> {
+    view! { cx,
+    nav{ul{
+        li{a(class="router-link-active router-link-exact-active", href="/"){
+            "Home"
+        }}
+        li{a(class="router-link-active router-link-exact-active", href="/device-list"){
+            "Device List"
+        }}
+        li{a(class="router-link-active router-link-exact-active", href="/last-events"){
+            "Last Events"
+        }}
+        Indexed(
+            iterable=props.links,
+            view=|cx, Link { name, address }| view! { cx,
+                li {
+                    a(href=format!("https://www.youtube.com/watch?v={address}")) {
+                        (name)
+                    }
+                }
+            }
+        )
+        }
+    }
+}
+}
+#[component]
+pub fn ViewFoot<G: Html>(cx: Scope) -> View<G> {
+    view! { cx,
+    footer{"© Pingoin-Tech"}
+    }
 }

@@ -1,131 +1,102 @@
-//! The simplest fetch example.
+use crate::router::{AppRoutes, RouterView};
+use fireplace::eventhandler::{EventName, EventType};
 use fireplace::{config::Link, devices::Device, eventhandler::Event};
-use seed::prelude::*;
-use serde_json;
+use gloo_timers::future::TimeoutFuture;
+use sycamore::futures::spawn_local_scoped;
+use sycamore::prelude::*;
+use sycamore_router::HistoryIntegration;
+use sycamore_router::Router;
+
+use serde_json::{self, Error};
 mod components;
 mod router;
 mod utils;
 mod views;
 
-use components::{view_foot, view_head, view_nav};
-use router::Page;
+use components::{ViewFoot, ViewHead, ViewNav};
 
-use crate::{router::route_view, utils::post};
 use utils::fetch;
-
-// ------ ------
-//     Model
-// ------ ------
-
-#[derive(Default)]
-pub struct Model {
-    pub version: Option<String>,
-    pub devices: Vec<Device>,
-    pub links: Vec<Link>,
-    pub last_events: Vec<Event>,
-    pub route: Option<Page>,
-    pub last_actions: Vec<Event>,
-}
-
-// ------ ------
-//     Init
-// ------ ------
-
-fn init(_: Url, orders: &mut impl Orders<Msg>) -> Model {
-    orders
-        .stream(streams::interval(1000, || Msg::Fetch))
-        .perform_cmd(async { Msg::Fetch });
-    Model::default()
-}
-
-// ------ ------
-//    Update
-// ------ ------
-
-pub enum Msg {
-    Fetch,
-    SetView(Page),
-    ReceivedVersion(String),
-    ReceivedDevices(Vec<Device>),
-    ReceivedLinks(Vec<Link>),
-    ReceivedLastActions(Vec<Event>),
-    ReceivedLastEvents(Vec<Event>),
-    TriggerAction(Event),
-}
-
-pub fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
-    match msg {
-        Msg::Fetch => {
-            orders
-                .skip() // No need to rerender
-                .perform_cmd(fetch("/api/version", |response| {
-                    Some(Msg::ReceivedVersion(response))
-                }))
-                .perform_cmd(fetch("/api/devices", |response| {
-                    if let Ok(devs) = serde_json::from_str(&response) {
-                        Some(Msg::ReceivedDevices(devs))
-                    } else {
-                        None
-                    }
-                }))
-                .perform_cmd(fetch("/api/links", |response| {
-                    if let Ok(links) = serde_json::from_str(&response) {
-                        Some(Msg::ReceivedLinks(links))
-                    } else {
-                        None
-                    }
-                }))
-                .perform_cmd(fetch("/api/last-events", |response| {
-                    if let Ok(events) = serde_json::from_str(&response) {
-                        Some(Msg::ReceivedLastEvents(events))
-                    } else {
-                        None
-                    }
-                }));
-        }
-        Msg::ReceivedVersion(user) => {
-            model.version = Some(user);
-        }
-        Msg::ReceivedDevices(devs) => {
-            model.devices = devs;
-        }
-        Msg::ReceivedLinks(links) => {
-            model.links = links;
-        }
-        Msg::ReceivedLastActions(actions) => {
-            model.last_actions = actions;
-        }
-        Msg::ReceivedLastEvents(events) => {
-            model.last_events = events;
-        }
-        Msg::SetView(page) => {
-            model.route = Some(page);
-        }
-        Msg::TriggerAction(event) => {
-            orders
-                .skip()
-                .perform_cmd(post("/api/trigger-action", event, |_| None));
-        }
-    }
-}
-
-// ------ ------
-//     View
-// ------ ------
-
-pub fn view(model: &Model) -> Vec<Node<Msg>> {
-    vec![
-        view_head(model),
-        view_nav(model),
-        route_view(model),
-        view_foot(),
-    ]
-}
 
 // ------ ------
 //     Start
 // ------ ------
 
+#[component]
+fn App<G: Html>(cx: Scope) -> View<G> {
+    let version = create_signal(cx, "0.0.0".to_string());
+    let links: &Signal<Vec<Link>> = create_signal(cx, Vec::new());
+    let devices: &Signal<Vec<Device>> = create_signal(cx, Vec::new());
+    let last_events: &Signal<Vec<Event>> = create_signal(cx, Vec::new());
+    let last_actions: &Signal<Vec<Event>> = create_signal(cx, Vec::new());
+
+    spawn_local_scoped(cx, async move {
+        loop {
+            fetch("/api/version", |response| {
+                version.set(response);
+            })
+            .await;
+
+            fetch("/api/devices", |response| {
+                if let Ok(devs) = serde_json::from_str(&response) {
+                    devices.set(devs);
+                }
+            })
+            .await;
+
+            fetch("/api/links", |response| {
+                if let Ok(links_data) = serde_json::from_str(&response) {
+                    links.set(links_data);
+                }
+            })
+            .await;
+            fetch("/api/last-events", |response| {
+                let res:Result<Vec<Event>,Error>=serde_json::from_str(&response);
+                if let Ok(events) = res {
+                    let mut tmp_ev=Vec::new();
+                    let mut tmp_ac=Vec::new();
+                    for ev in events{
+                        if ev.event != EventName::NewData {
+                            if ev.event_type == EventType::Action {
+                                tmp_ac.push(ev);
+                            } else {
+                                tmp_ev.push(ev);
+                            }
+                        }
+                    }
+                    last_events.set(tmp_ev);
+                    last_actions.set(tmp_ac);
+                }
+            })
+            .await;
+
+            TimeoutFuture::new(1000).await;
+        }
+    });
+
+    view! {cx,
+            Router(
+                integration=HistoryIntegration::new(),
+                view=move |cx, route: &ReadSignal<AppRoutes>| {
+                    view! {cx,
+            ViewHead(version=version)
+            ViewNav(links=links)
+            RouterView(
+                route=route,
+                last_events=last_events,
+                last_actions=last_actions,
+                devices=devices
+            )
+            ViewFoot{}
+        }
+    }
+    )
+        }
+}
+
 fn main() {
-    App::start("app", init, update, view);
+    sycamore::render(|cx| {
+        view! {cx,
+            App{}
+        }
+    });
 }

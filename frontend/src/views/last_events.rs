@@ -1,37 +1,55 @@
-use crate::{Model, Msg};
-use fireplace::eventhandler::{EventName, EventType};
-use seed::{prelude::*, *};
+use fireplace::eventhandler::{Event};
+use sycamore::prelude::*;
 
-pub fn events(model: &Model) -> Node<Msg> {
-    let mut last_events: Vec<Node<Msg>> = Vec::new();
-    let mut last_actions: Vec<Node<Msg>> = Vec::new();
-
-    for event in &model.last_events {
-        let entry = li! {
-            event.id.to_string(),
-            br!(),
-            ul!(
-                li!(
-                    event.timestamp.to_string(),
-                ),
-                li!(
-                    event.event.to_string(),
-                )
-            )
-        };
-        if event.event != EventName::NewData {
-            if event.event_type == EventType::Action {
-                last_actions.push(entry);
-            } else {
-                last_events.push(entry);
+#[component(inline_props)]
+pub fn EventView<'a, G: Html>(
+    cx: Scope<'a>,
+    last_events: &'a ReadSignal<Vec<Event>>,
+    last_actions: &'a ReadSignal<Vec<Event>>,
+) -> View<G> {
+    view! { cx,
+        main(class="dual-column"){
+            h2{"Last Events/Actions"}
+            article{
+                h3{"Events"}
+                ul{
+                    Indexed(
+                        iterable=last_events,
+                        view=|cx, x| view! { cx,
+                            EventElementView(event=x.clone())
+                        },
+                    )
+                }
+            }
+            article{
+                h3{"Actions"}
+                ul{
+                    Indexed(
+                        iterable=last_actions,
+                        view=|cx, x| view! { cx,
+                            EventElementView(event=x.clone())
+                        },
+                    )
+                }
             }
         }
     }
+}
 
-    main![
-        C!("dual-column"),
-        h2!("Last Events/Actions"),
-        article!(h3!("Events"), ul!(last_events)),
-        article!(h3!("Actions"), ul!(last_actions))
-    ]
+#[component(inline_props)]
+pub fn EventElementView<'a, G: Html>(cx: Scope<'a>, event:Event) -> View<G> {
+    view! { cx,
+    li{
+        (event.id)
+        br{}
+        ul{
+            li{
+                (event.timestamp)
+            }
+            li{
+                (event.event)
+            }
+        }
+    }
+    }
 }

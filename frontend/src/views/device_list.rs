@@ -1,13 +1,23 @@
-use seed::{prelude::*, *};
+use sycamore::prelude::*;
+use fireplace::devices::Device;
 
-use crate::{components::device_field, Model, Msg};
+use crate::components::DeviceField;
 
-pub fn device_list(model: &Model) -> Node<Msg> {
-    let mut devices: Vec<Node<Msg>> = Vec::new();
+#[component(inline_props)]
+pub fn DeviceList<'a, G: Html>(
+    cx: Scope<'a>,
+    devices: &'a ReadSignal<Vec<Device>>,
+) -> View<G> {
 
-    for device in &model.devices {
-        devices.push(device_field(device));
+    view! { cx,
+        main(class="tripple-column"){ 
+            h2{"all devices"}
+            Indexed(
+                iterable=devices,
+                view=|cx, x| view! { cx,
+                    DeviceField(device=x)
+                },
+            )
+        }
     }
-
-    main![C!["tripple-column"], h2!("all devices"), devices]
 }

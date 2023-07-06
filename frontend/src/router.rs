@@ -1,20 +1,44 @@
-use seed::prelude::*;
+use fireplace::{devices::Device, eventhandler::Event};
+use sycamore::prelude::*;
+use sycamore_router::Route;
 
-use crate::views::{device_list, events};
-use crate::{Model, Msg};
+use crate::views::{DeviceList, EventView};
+//use crate::{Model, Msg};
 
-pub enum Page {
+#[derive(Route)]
+pub enum AppRoutes {
+    #[to("/")]
+    Index,
+    #[to("/device-list")]
     DeviceList,
-    LastAction,
+    #[to("/last-events")]
+    LastEvents,
+    #[not_found]
+    NotFound,
 }
 
-pub fn route_view(model: &Model) -> Node<Msg> {
-    if let Some(route) = &model.route {
-        match route {
-            Page::DeviceList => device_list(model),
-            Page::LastAction => events(model),
-        }
-    } else {
-        device_list(model)
+#[component(inline_props)]
+pub fn RouterView<'a, G: Html>(
+    cx: Scope<'a>,
+    route: &'a ReadSignal<AppRoutes>,
+    last_events: &'a ReadSignal<Vec<Event>>,
+    last_actions: &'a ReadSignal<Vec<Event>>,
+    devices: &'a ReadSignal<Vec<Device>>,
+) -> View<G> {
+    view! { cx,
+        (match route.get().as_ref() {
+            AppRoutes::Index => view! { cx,
+                "This is the index page"
+            },
+            AppRoutes::DeviceList => view! { cx,
+                DeviceList(devices=devices)
+            },
+            AppRoutes::LastEvents => view! { cx,
+                EventView(last_events=last_events,last_actions=last_actions)
+            },
+            AppRoutes::NotFound => view! { cx,
+               article{h2{"404 Not Found"}}
+            },
+        })
     }
 }
