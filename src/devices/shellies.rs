@@ -3,6 +3,8 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
+use super::subdevices::SubDevice;
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ShellyAnnounce {
     pub id: String,
@@ -36,7 +38,7 @@ impl Shelly {
     pub fn trigger_action(
         &mut self,
         action: &Event,
-        values: BTreeMap<String, Value>,
+        values: BTreeMap<String, SubDevice>,
     ) -> ActionType {
         let base_path = format!("shellies/{}/", action.id);
         let index = match action.index {
@@ -89,7 +91,7 @@ impl Shelly {
                 Shelly::ShellyDimmer => {
                     let toggle = match values.get("light-on") {
                         Some(is_on) => match is_on {
-                            Value::Bool(is_on) => !!is_on,
+                            SubDevice::Sensor(Value::Bool(is_on) )=> !!is_on,
                             _ => false,
                         },
                         None => false,
@@ -102,11 +104,11 @@ impl Shelly {
                 }
                 Shelly::Shelly25Roller => {
                     let toggle = {
-                        if let Some(Value::String(status)) = values.get("roller-status") {
+                        if let Some(SubDevice::Sensor(Value::String(status)) )= values.get("roller-status") {
                             if status.as_str() != "stop" {
                                 "stop"
                             } else {
-                                if let Some(Value::String(last_dir)) =
+                                if let Some(SubDevice::Sensor(Value::String(last_dir)) )=
                                     values.get("roller-last-direction")
                                 {
                                     if last_dir.as_str() == "open" {
@@ -115,7 +117,7 @@ impl Shelly {
                                         "open"
                                     }
                                 } else {
-                                    if let Some(Value::Number(pos)) = values.get("roller-position")
+                                    if let Some(SubDevice::Sensor(Value::Number(pos))) = values.get("roller-position")
                                     {
                                         if pos.abs() > 50.0 {
                                             "close"

@@ -3,7 +3,7 @@ use fireplace::devices::Device;
 pub mod shellies;
 pub mod weather_underground_device;
 
-use fireplace::eventhandler::Value;
+use fireplace::devices::subdevices::SubDevice;
 
 use crate::mutex_box::MutexBox;
 
@@ -27,13 +27,13 @@ where
     )
 }
 
-pub fn insert_value_in_device(id: String, key: String, val: Value) -> (bool, DateTime<Utc>) {
+pub fn insert_value_in_device(id: String, key: String, val: SubDevice) -> (bool, DateTime<Utc>) {
     get_device_from_list(
         id,
         |device| {
             let old_time = device.last_data.clone();
             device.last_data = Utc::now();
-            device.values.insert(key, val);
+            device.subdevices.insert(key, val);
             (true, old_time)
         },
         |_| (false, Utc::now()),

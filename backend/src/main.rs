@@ -35,7 +35,7 @@ async fn main() {
             SENSOR_LIST.open_locked(
                 |devs| {
                     let mut new = Device::default();
-                    new.subdevice = DeviceType::from_string(& device);
+                    new.device_type = DeviceType::from_string(& device);
                     new.id = id;
                     new.alias=Some(dev.alias);
                     devs.push(new)

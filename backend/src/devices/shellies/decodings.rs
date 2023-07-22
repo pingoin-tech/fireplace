@@ -12,7 +12,7 @@ use crate::{
     store::STORE,
     utils::format_mac,
 };
-use fireplace::eventhandler::{EventName, EventType, Value};
+use fireplace::{eventhandler::{EventName, EventType, Value}, devices::subdevices::SubDevice};
 use fireplace::{devices::DeviceType, eventhandler::Event};
 
 pub fn decode_announce(content: Telegram) {
@@ -28,9 +28,9 @@ pub fn decode_announce(content: Telegram) {
                 let (shelly, actions, events) = device.to_shelly();
                 dev.id = device.id.clone();
                 dev.ip = device.ip.clone();
-                dev.subdevice = DeviceType::Shelly(shelly);
-                dev.values
-                    .insert("firmware".to_string(), Value::String(device.fw_ver));
+                dev.device_type = DeviceType::Shelly(shelly);
+                dev.subdevices
+                    .insert("firmware".to_string(), SubDevice::Sensor(Value::String(device.fw_ver)));
                 dev.mac = format_mac(device.mac);
                 dev.last_message = Utc::now();
                 dev.last_data = Utc::now();
@@ -62,31 +62,31 @@ pub fn decode_info(telegram: Telegram) {
                 telegram.id.clone(),
                 |device| {
                     device.rssi = info_data.wifi_sta.rssi;
-                    match &mut device.subdevice {
+                    match &mut device.device_type {
                         DeviceType::Shelly(_shel) => {
                             if let Some(relays) = info_data.relays {
                                 for (pos, relay) in relays.iter().enumerate() {
-                                    device.values.insert(
+                                    device.subdevices.insert(
                                         create_val_key("relay", pos),
-                                        Value::Bool(relay.ison),
+                                        SubDevice::Sensor(Value::Bool(relay.ison)),
                                     );
                                     if let Some(overpower) = relay.overpower {
-                                        device.values.insert(
+                                        device.subdevices.insert(
                                             create_val_key("relay-overpower", pos),
-                                            Value::Bool(overpower),
+                                            SubDevice::Sensor(Value::Bool(overpower)),
                                         );
                                     }
                                 }
                             }
                             if let Some(lights) = info_data.lights {
                                 for (pos, light) in lights.iter().enumerate() {
-                                    device.values.insert(
+                                    device.subdevices.insert(
                                         create_val_key("light-on", pos),
-                                        Value::Bool(light.ison),
+                                        SubDevice::Sensor(Value::Bool(light.ison)),
                                     );
-                                    device.values.insert(
+                                    device.subdevices.insert(
                                         create_val_key("brightness", pos),
-                                        Value::Number(light.brightness as f32),
+                                        SubDevice::Sensor(Value::Number(light.brightness as f32)),
                                     );
                                 }
                             }
@@ -96,22 +96,22 @@ pub fn decode_info(telegram: Telegram) {
                             let hours = (info_data.uptime / 60) / 60 % 24;
                             let days = (info_data.uptime / 60) / 60 / 24;
 
-                            device.values.insert(
+                            device.subdevices.insert(
                                 "uptime".to_string(),
-                                Value::String(format!(
+                                SubDevice::Sensor(Value::String(format!(
                                     "{}d{}h{}min{}s",
                                     days, hours, minutes, seconds
-                                )),
+                                ))),
                             );
                             if let Some(op) = info_data.overpower {
                                 device
-                                    .values
-                                    .insert("overpower".to_string(), Value::Bool(op));
+                                    .subdevices
+                                    .insert("overpower".to_string(), SubDevice::Sensor(Value::Bool(op)));
                             }
                             if let Some(ot) = info_data.overtemperature {
                                 device
-                                    .values
-                                    .insert("overtemperature".to_string(), Value::Bool(ot));
+                                    .subdevices
+                                    .insert("overtemperature".to_string(), SubDevice::Sensor(Value::Bool(ot)));
                             }
                         }
                         _ => {}
@@ -151,7 +151,7 @@ pub fn decode_other(telegram: Telegram) {
 
 pub fn decode_value(telegram: Telegram, value: &str) {
     if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
-        insert_value_in_device(telegram.id, value.to_string(), Value::Number(val));
+        insert_value_in_device(telegram.id, value.to_string(), SubDevice::Sensor(Value::Number(val)));
     }
 }
 
@@ -164,7 +164,7 @@ pub fn decode_subdevice(telegram: Telegram, subdev: &str) {
                     old_data_time = insert_value_in_device(
                         telegram.id.clone(),
                         create_val_key((subdev.to_string() + "-power").as_str(), index),
-                        Value::Number(val),
+                        SubDevice::Sensor(Value::Number(val)),
                     );
                 }
             }
@@ -174,8 +174,8 @@ pub fn decode_subdevice(telegram: Telegram, subdev: &str) {
                     old_data_time = insert_value_in_device(
                         telegram.id.clone(),
                         create_val_key((subdev.to_string() + "-energy").as_str(), index),
-                        Value::Number(val),
-                    );
+                        SubDevice::Sensor(Value::Number(val),
+                    ));
                 }
             }
             Some(_) => {}
@@ -187,8 +187,8 @@ pub fn decode_subdevice(telegram: Telegram, subdev: &str) {
                 old_data_time = insert_value_in_device(
                     telegram.id.clone(),
                     create_val_key((subdev.to_string() + "-on").as_str(), index),
-                    Value::Bool(on),
-                );
+                    SubDevice::Sensor(Value::Bool(on),
+                ));
             }
         }
     }
@@ -213,16 +213,16 @@ pub fn decode_roller(telegram: Telegram) {
                 old_data_time = update_roller_stat(
                     telegram.id,
                     create_val_key("roller-status", index),
-                    Value::String(telegram.payload),
-                );
+                    SubDevice::Sensor(Value::String(telegram.payload),
+                ));
             }
             Some("pos") => {
                 if let Ok(val) = f32::from_str(telegram.payload.as_str()) {
                     old_data_time = insert_value_in_device(
                         telegram.id,
                         create_val_key("roller-position", index),
-                        Value::Number(val),
-                    );
+                        SubDevice::Sensor(Value::Number(val),
+                    ));
                 }
             }
             Some("energy") => {
@@ -231,8 +231,8 @@ pub fn decode_roller(telegram: Telegram) {
                     old_data_time = insert_value_in_device(
                         telegram.id,
                         create_val_key("roller-energy", index),
-                        Value::Number(val),
-                    );
+                        SubDevice::Sensor(Value::Number(val),
+                    ));
                 }
             }
             Some("power") => {
@@ -240,16 +240,16 @@ pub fn decode_roller(telegram: Telegram) {
                     old_data_time = insert_value_in_device(
                         telegram.id,
                         create_val_key("roller-power", index),
-                        Value::Number(val),
-                    );
+                        SubDevice::Sensor(Value::Number(val),
+                    ));
                 }
             }
             Some("stop_reason") => {
                 old_data_time = insert_value_in_device(
                     telegram.id,
                     create_val_key("roller-stop-reason", index),
-                    Value::String(telegram.payload),
-                );
+                    SubDevice::Sensor(Value::String(telegram.payload),
+                ));
             }
             _ => {}
         }
@@ -265,18 +265,18 @@ fn create_val_key(name: &str, pos: usize) -> String {
     }
 }
 
-fn update_roller_stat(id: String, key: String, val: Value) -> (bool, DateTime<Utc>) {
+fn update_roller_stat(id: String, key: String, val: SubDevice) -> (bool, DateTime<Utc>) {
     get_device_from_list(
         id,
         |device| {
             let old_time = device.last_data.clone();
             device.last_data = Utc::now();
-            if val.clone() != Value::String("stop".to_string()) {
+            if val.clone() != SubDevice::Sensor(Value::String("stop".to_string()) ){
                 device
-                    .values
+                    .subdevices
                     .insert(key.replace("status", "last-direction"), val.clone());
             }
-            device.values.insert(key, val);
+            device.subdevices.insert(key, val);
             (true, old_time)
         },
         |_| (false, Utc::now()),

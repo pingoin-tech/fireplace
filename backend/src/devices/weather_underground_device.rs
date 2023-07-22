@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use super::get_device_from_list;
 use actix_web::{get, web, HttpRequest, HttpResponse, Responder};
 use chrono::Utc;
-use fireplace::{devices::{Device, DeviceType}, eventhandler::Value};
+use fireplace::{devices::{Device, DeviceType, subdevices::SubDevice}, eventhandler::Value};
 use serde::Deserialize;
 
 #[get("/weatherstation/updateweatherstation.php")]
@@ -119,23 +119,27 @@ pub async fn weatherstation(req: HttpRequest, data: web::Query<WuData>) -> impl 
         );
     }
 
+let mut subs: BTreeMap<String, SubDevice> = BTreeMap::new();
+for (key, v) in vals{
+    subs.insert(key, SubDevice::Sensor(v));
+}
     get_device_from_list(
         data.id.clone(),
         |dev| {
             dev.last_message = Utc::now();
             dev.last_data = Utc::now();
-            dev.values = vals.clone();
+            dev.subdevices = subs.clone();
         },
         |list| {
             let mut dev = Device::default();
-            dev.subdevice=DeviceType::WeatherUndergrundDevice;
+            dev.device_type=DeviceType::WeatherUndergrundDevice;
             dev.id = data.id.clone();
             if let Some(val) = req.peer_addr() {
                 dev.ip = val.ip().to_string();
             };
             dev.last_message = Utc::now();
             dev.last_data = Utc::now();
-            dev.values = vals.clone();
+            dev.subdevices = subs.clone();
 
             list.push(dev);
         },

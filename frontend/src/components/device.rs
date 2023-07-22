@@ -1,4 +1,4 @@
-use fireplace::devices::Device;
+use fireplace::devices::{subdevices::SubDevice, Device};
 use sycamore::{futures::spawn_local_scoped, prelude::*};
 
 use crate::utils::post;
@@ -33,12 +33,16 @@ pub fn DeviceField<'a, G: Html>(cx: Scope<'a>, device: Device) -> View<G> {
 
     let values = View::new_fragment(
         device
-            .values
+            .subdevices
             .into_iter()
             .map(|x| {
-                view! { cx,
-                div { (x.0) }
-                div{(format!("{}", x.1))}
+                if let SubDevice::Sensor(bla) = x.1 {
+                    view! { cx,
+                    div { (x.0) }
+                    div{(format!("{}", bla))}
+                    }
+                } else {
+                    view! { cx,}
                 }
             })
             .collect(),

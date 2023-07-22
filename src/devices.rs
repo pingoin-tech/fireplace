@@ -1,11 +1,14 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 pub mod shellies;
+pub mod subdevices;
 use shellies::Shelly;
 
 use std::collections::BTreeMap;
 
-use super::eventhandler::{ActionType, Event, Value};
+use self::subdevices::SubDevice;
+
+use super::eventhandler::{ActionType, Event};
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 pub struct Device {
@@ -16,11 +19,11 @@ pub struct Device {
     pub mac: String,
     pub last_message: DateTime<Utc>,
     pub last_data: DateTime<Utc>,
-    pub subdevice: DeviceType,
+    pub device_type: DeviceType,
     pub rssi: i16,
     pub available_actions: Vec<Event>,
+    pub subdevices: BTreeMap<String, SubDevice>,
     pub available_events: Vec<Event>,
-    pub values: BTreeMap<String, Value>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -48,8 +51,8 @@ impl DeviceType {
 
 impl Device {
     pub fn trigger_action(&mut self, action: &Event) -> ActionType {
-        let vals = self.values.clone();
-        match &mut self.subdevice {
+        let vals = self.subdevices.clone();
+        match &mut self.device_type {
             DeviceType::Shelly(device) => device.trigger_action(action, vals),
             DeviceType::Empty => {
                 println!("{:?}", action);
