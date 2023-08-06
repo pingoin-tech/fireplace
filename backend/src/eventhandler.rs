@@ -1,6 +1,6 @@
-use crate::{devices, mutex_box::MutexBox};
+use crate::{devices, mutex_box::MutexBox, store::STORE};
 use chrono::Utc;
-use fireplace::eventhandler::{ActionType, Event, EventName};
+use fireplace::eventhandler::{ActionType, Event, EventName, EventType};
 use rumqttc::{AsyncClient, QoS};
 use tokio::time::{sleep, Duration};
 
@@ -86,11 +86,36 @@ impl Handler {
     }
 
     async fn work_event(&mut self, event: &mut Event) {
+        let mut actions: Vec<Event> = Vec::new();
+        STORE.open_locked(
+            |store| {
+                store.config.actions.iter().for_each(|action| {
+                    if action.event_is_equal(&event) {
+                        let mut new_action = action.action.clone();
+                        new_action.handled = false;
+                        new_action.event_type = EventType::Action;
+                        new_action.timestamp = Utc::now();
+                        dbg!(&new_action);
+                        actions.push(new_action);
+                    }
+                })
+            },
+            (),
+        );
+        for mut ac in actions{
+            self.work_action(&mut ac).await;
+        }
         match event.event {
             EventName::NewData => (),
-            EventName::InputShort => (),
-            EventName::InputLong => (),
-            _ => (),
+            EventName::InputShort => {
+                dbg!(&event);
+            }
+            EventName::InputLong => {
+                dbg!(&event);
+            }
+            _ => {
+                dbg!(&event);
+            }
         }
         event.handled = true;
     }

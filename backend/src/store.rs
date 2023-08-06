@@ -33,6 +33,7 @@ fn read_config() -> ConfigFile {
 pub fn init_store() {
     let config = read_config();
 
+    dbg!(&config);
     STORE.init(Store { config: config });
 }
 

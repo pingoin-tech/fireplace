@@ -28,7 +28,7 @@ pub fn RouterView<'a, G: Html>(
     view! { cx,
         (match route.get().as_ref() {
             AppRoutes::Index => view! { cx,
-                "This is the index page"
+                DeviceList(devices=devices)
             },
             AppRoutes::DeviceList => view! { cx,
                 DeviceList(devices=devices)
